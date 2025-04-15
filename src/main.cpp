@@ -2,9 +2,9 @@
 #include "esp_sleep.h"
 #include "config.h"
 #include "types.h"
-#include "sensors/sensors.h"
-#include "power/power.h"
-#include "network/network.h"
+#include "sensors.h"
+#include "power.h"
+#include "network.h"
 
 void handle_wakeup(esp_sleep_wakeup_cause_t wakeup_reason);
 
@@ -41,7 +41,7 @@ void handle_wakeup(esp_sleep_wakeup_cause_t wakeup_reason){
             return;
         }
         log("Data sent successfully");
-        
+
         disconnect_from_wifi();
     }else if(wakeup_reason == ESP_SLEEP_WAKEUP_EXT1){
     }

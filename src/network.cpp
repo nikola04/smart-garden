@@ -4,7 +4,7 @@
 
 #define API_URL "http://example.com/api/data"
 
-int connect_to_wifi(char *ssid, char *password)
+int connect_to_wifi(const char *ssid, const char *password)
 {
     unsigned long start_time = millis();
     WiFi.begin(ssid, password);
@@ -39,10 +39,7 @@ int send_data(sensors_data_t sdata, power_data_t pdata)
         if (responseCode < 200 || responseCode >= 300)
             return -1;
         return 0;
-    }
-    else {
-        Serial.println("WiFi not connected");
-    }
+    }else return -2;
 }
 
 String json_stringify(sensors_data_t sdata, power_data_t pdata){

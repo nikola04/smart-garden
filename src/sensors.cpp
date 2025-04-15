@@ -1,5 +1,5 @@
 #include "sensors.h"
-#include "utils/helpers.cpp"
+#include "helpers.h"
 
 air_data_t read_air_sensor() {
     air_data_t air_sensor;

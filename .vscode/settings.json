@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.ejs": "html",
+        "stdlib.h": "c",
+        "power.h": "c",
+        "types.h": "c",
+        "helpers.c": "cpp"
+    }
+}

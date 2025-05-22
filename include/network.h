@@ -7,7 +7,7 @@
 enum wifi_status_t {
     WIFI_CONNECTING = 1,
     WIFI_CONNECTED = 2,
-    WIFI_DISCONNECTED = 0
+    WIFI_DISCONNECTED = 0,
 };
 
 wifi_status_t get_wifi_status();

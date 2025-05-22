@@ -3,8 +3,6 @@
 #include "WiFi.h"
 #include "HTTPClient.h"
 
-#define API_URL "http://example.com/api/data"
-
 static wifi_status_t wifi_status = WIFI_DISCONNECTED;
 
 wifi_status_t get_wifi_status()
@@ -21,6 +19,11 @@ void wifi_connect_loop(){
     if(status == WL_CONNECTED){
         wifi_status = WIFI_CONNECTED;
         wifi_retry_count = 0;
+        return;
+    }
+
+    if(status == WL_NO_SHIELD){
+        wifi_status = WIFI_DISCONNECTED;
         return;
     }
 

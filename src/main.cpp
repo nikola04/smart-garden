@@ -5,6 +5,9 @@
 #include "power.h"
 #include "network.h"
 #include "display.h"
+#include "Wire.h"
+#include "Adafruit_SSD1306.h"
+
 
 static int wakeup_function = -1;
 static bool waiting_wifi = false;
@@ -14,15 +17,21 @@ void setup() {
     Serial.begin(SERIAL_BAUD);
 
     // Pins configuration
+    Wire.begin(I2C_SDA, I2C_SCL);
     pinMode(GPIO_BUTTON_PIN, INPUT_PULLUP);
 
-    // Deep sleep configuration
-    constexpr uint64_t WAKEUP_TIMER_US = DEEPSLEEP_TIME_S * 1000000ULL;
-    esp_sleep_enable_ext1_wakeup(1ULL << GPIO_BUTTON_PIN, ESP_EXT1_WAKEUP_ANY_HIGH);
-    esp_sleep_enable_timer_wakeup(WAKEUP_TIMER_US);
+    waiting_wifi = true;
+    set_display_data(read_power_data(), read_sensors());
+    connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
+    display_power_on();
 
-    esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
-    handle_wakeup(wakeup_reason);
+    // Deep sleep configuration
+    // constexpr uint64_t WAKEUP_TIMER_US = DEEPSLEEP_TIME_S * 1000000ULL;
+    // esp_sleep_enable_ext1_wakeup(1ULL << GPIO_BUTTON_PIN, ESP_EXT1_WAKEUP_ANY_HIGH);
+    // esp_sleep_enable_timer_wakeup(WAKEUP_TIMER_US);
+
+    // esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+    // handle_wakeup(wakeup_reason);
 }
 
 void log(const char *message) {
@@ -31,13 +40,13 @@ void log(const char *message) {
 
 void loop(){
     wifi_connect_loop();
-    check_wifi_status_loop();
+    display_check_wifi_status_loop();
     if(waiting_wifi && get_wifi_status() == WIFI_CONNECTED){
         waiting_wifi = false;
         handle_wifi_connected();
     }
-    button_press_loop();
-    sleep_timeout_loop();
+    // button_press_loop();
+    // sleep_timeout_loop();
 }
 
 // check if inactive for a while to go to sleep
@@ -79,14 +88,16 @@ void handle_wifi_connected(){
 
     if(send_data(read_sensors(), read_power_data()) != 0){
         log("Failed to send data");
+        display_notification("Fail!");
         return;
     }
     log("Data sent successfully");
+    display_notification("Sent!");
 
-    if(wakeup_function == 0){
-        handle_sleep();
-        return;
-    }
+    // if(wakeup_function == 0){
+    //     handle_sleep();
+    //     return;
+    // }
 }
 
 void handle_wakeup(esp_sleep_wakeup_cause_t wakeup_reason){

@@ -2,13 +2,18 @@
 #include "network.h"
 #include "WiFi.h"
 #include "HTTPClient.h"
+#include "storage.h"
+#include "main.h"
+#include "Arduino.h"
 
 static wifi_status_t wifi_status = WIFI_DISCONNECTED;
 
-wifi_status_t get_wifi_status()
-{
+wifi_status_t get_wifi_status(){
     return wifi_status;
 }
+
+String wifiSSID = "";
+String wifiPassword = "";
 
 static ulong connection_start_time = 0;
 void wifi_connect_loop(){
@@ -34,30 +39,31 @@ void wifi_connect_loop(){
             if(millis() - last_retry_time > retry_delay){
                 last_retry_time = millis();
                 wifi_retry_count++;
-                connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
+                connect_to_wifi(wifiSSID, wifiPassword);
             }
         }else wifi_status = WIFI_DISCONNECTED;
     }else wifi_status = WIFI_CONNECTING;
 }
 
-int connect_to_wifi(const char *ssid, const char *password)
-{
+int connect_to_wifi(String ssid, String password){
     connection_start_time = millis();
-    WiFi.begin(ssid, password);
+    wifiSSID = ssid;
+    wifiPassword = password;
+    WiFi.begin(ssid.c_str(), password.c_str());
     return 0;
 }
 
-int wifi_off()
-{
+int wifi_off(){
     WiFi.mode(WIFI_OFF);
     return 0;
 }
 
 String json_stringify(sensors_data_t sdata, power_data_t pdata);
 
-int send_data(sensors_data_t sdata, power_data_t pdata)
-{
+int send_data(sensors_data_t sdata, power_data_t pdata){
     if (WiFi.status() != WL_CONNECTED) return -2;
+
+    String api_key = getAPIKey();
 
     HTTPClient http;
     http.setTimeout(5000);
@@ -66,6 +72,7 @@ int send_data(sensors_data_t sdata, power_data_t pdata)
     try{
         http.begin(API_URL);
         http.addHeader("Content-Type", "application/json");
+        http.addHeader("X-api-key", api_key);
         int responseCode = http.POST(payload);
         if (responseCode < 200 || responseCode >= 300)
             return -1;
@@ -96,7 +103,7 @@ String json_stringify(sensors_data_t sdata, power_data_t pdata){
     json += "\"level\":" + String(pdata.battery.level) + ",";
     json += "\"voltage\":" + String(pdata.battery.voltage) + "},";
     
-    json += "\"solar_panel\":{";
+    json += "\"charger\":{";
     json += "\"voltage\":" + String(pdata.solar_panel.voltage) + ",";
     json += "\"current\":" + String(pdata.solar_panel.current) + ",";
     json += "\"charging\":" + String(pdata.solar_panel.charging ? "true" : "false") + "}";

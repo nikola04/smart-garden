@@ -3,6 +3,7 @@
 
 #include "sensors.h"
 #include "power.h"
+#include "Arduino.h"
 
 enum wifi_status_t {
     WIFI_CONNECTING = 1,
@@ -11,7 +12,7 @@ enum wifi_status_t {
 };
 
 wifi_status_t get_wifi_status();
-int connect_to_wifi(const char* ssid, const char* password);
+int connect_to_wifi(String ssid, String password);
 int wifi_off();
 void wifi_connect_loop();
 int send_data(sensors_data_t sdata, power_data_t pdata);

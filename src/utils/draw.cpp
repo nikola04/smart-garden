@@ -78,6 +78,17 @@ void draw_battery_status(Adafruit_SSD1306 *display, int level, bool charging){
 }
 
 void draw_sun_icon(Adafruit_SSD1306 *display, bool sunny){
+    int x = 32;
+    int y = 10;
+    switch (sunny){
+        case true:
+            display->fillCircle(x, y, 4, WHITE);
+            break;
+        case false:
+        default:
+            drawArc(display, x, y, 4, 120, 220);
+            break;
+    }
 }
 
 void draw_temperature(Adafruit_SSD1306 *display, float temp){

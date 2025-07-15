@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.ejs": "html",
+        "*.c": "c",
         "stdlib.h": "c",
         "power.h": "c",
         "types.h": "c",
@@ -12,6 +13,7 @@
         "unordered_set": "cpp",
         "vector": "cpp",
         "string_view": "cpp",
-        "initializer_list": "cpp"
+        "initializer_list": "cpp",
+        "cmath": "cpp"
     },
 }

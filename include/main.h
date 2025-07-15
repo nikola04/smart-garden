@@ -10,5 +10,6 @@ void handle_button_press();
 void handle_wifi_connected();
 void sleep_timeout_loop();
 void button_press_loop();
+void log(const char *message);
 
 #endif // MAIN_H

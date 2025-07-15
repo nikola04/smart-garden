@@ -1,17 +1,23 @@
 #include "main.h"
 #include "config.h"
 #include "types.h"
+#include "ble.h"
 #include "sensors.h"
 #include "power.h"
 #include "network.h"
 #include "display.h"
 #include "Wire.h"
 #include "Adafruit_SSD1306.h"
-
+#include "storage.h"
+#include "Arduino.h"
 
 static int wakeup_function = -1;
 static bool waiting_wifi = false;
 static ulong last_press = 0;
+
+void log(const char *message) {
+    Serial.println(message);
+}
 
 void setup() {
     Serial.begin(SERIAL_BAUD);
@@ -22,8 +28,19 @@ void setup() {
 
     waiting_wifi = true;
     set_display_data(read_power_data(), read_sensors());
-    connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
+
+
+    String ssid = getWifiSSID();
+    String pswd = getWifiPassword();
+    log(ssid.c_str());
+    log(pswd.c_str());
+
+    connect_to_wifi(ssid, pswd);
     display_power_on();
+
+    // Initialize BLE
+    setup_ble();
+    start_ble_server();
 
     // Deep sleep configuration
     // constexpr uint64_t WAKEUP_TIMER_US = DEEPSLEEP_TIME_S * 1000000ULL;
@@ -34,10 +51,6 @@ void setup() {
     // handle_wakeup(wakeup_reason);
 }
 
-void log(const char *message) {
-    Serial.println(message);
-}
-
 void loop(){
     wifi_connect_loop();
     display_check_wifi_status_loop();
@@ -45,7 +58,8 @@ void loop(){
         waiting_wifi = false;
         handle_wifi_connected();
     }
-    // button_press_loop();
+    button_press_loop();
+    ble_loop();
     // sleep_timeout_loop();
 }
 
@@ -94,14 +108,16 @@ void handle_wifi_connected(){
     log("Data sent successfully");
     display_notification("Sent!");
 
-    // if(wakeup_function == 0){
-    //     handle_sleep();
-    //     return;
-    // }
+    if(wakeup_function == 0){
+        // handle_sleep();
+        return;
+    }
 }
 
 void handle_wakeup(esp_sleep_wakeup_cause_t wakeup_reason){
-    connect_to_wifi(WIFI_SSID, WIFI_PASSWORD);
+    const char *wifi_ssid = getWifiSSID().c_str();
+    const char *wifi_pswd = getWifiPassword().c_str();
+    connect_to_wifi(wifi_ssid, wifi_pswd);
     log("Connecting to WiFi");
     waiting_wifi = true;
 
@@ -135,6 +151,7 @@ void handle_wakeup(esp_sleep_wakeup_cause_t wakeup_reason){
 
 void handle_sleep(){
     log("Going back to sleep");
+    stop_ble_server();
     wakeup_function = -1;
     display_power_off();
     wifi_off();

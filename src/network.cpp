@@ -58,8 +58,6 @@ int wifi_off(){
     return 0;
 }
 
-String json_stringify(sensors_data_t sdata, power_data_t pdata);
-
 int send_data(sensors_data_t sdata, power_data_t pdata){
     if (WiFi.status() != WL_CONNECTED) return -2;
 

@@ -31,8 +31,8 @@ String getDeviceName() {
     if(name && name.length() > 2) 
         return name;
         
-    setDeviceName(String(DEVICE_NAME));
-    return String(DEVICE_NAME);
+    setDeviceName(String(DEFAULT_DEVICE_NAME));
+    return String(DEFAULT_DEVICE_NAME);
 }
 
 void setDeviceName(const String &name) {

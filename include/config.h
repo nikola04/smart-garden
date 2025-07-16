@@ -9,10 +9,11 @@
 #define DEEPSLEEP_TIME_S        60 * 10 // 10 minutes
 #define INACTIVE_TIME_MS        20000
 
-#define SERVICE_UUID            "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID     "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define SERVICE_UUID                    "5C885D90-2726-4368-A12D-342D26C1C99A"
+#define DEVICE_CHARACTERISTIC_UUID      "57C1288C-B1A8-44BC-AABD-1D94F987BE97"
+#define SENSORS_CHARACTERISTIC_UUID     "78B32B3B-DA18-43BB-B56D-4773BA5DDBD1"
 
-#define DEVICE_NAME             "DevBoard"
-#define API_URL                 "https://garden.nnikola.xyz/api/report"
+#define DEFAULT_DEVICE_NAME             "DevBoard"
+#define API_URL                         "https://garden.nnikola.xyz/api/report"
 
 #endif // CONFIG_H

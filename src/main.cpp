@@ -29,7 +29,6 @@ void setup() {
     waiting_wifi = true;
     set_display_data(read_power_data(), read_sensors());
 
-
     String ssid = getWifiSSID();
     String pswd = getWifiPassword();
     log(ssid.c_str());

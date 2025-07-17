@@ -3,7 +3,12 @@
 #include "config.h"
 #include "storage.h"
 #include "BLEDevice.h"
+#include "BLE2902.h"
 #include "callbacks.h"
+#include "network.h"
+#include "json.h"
+
+BLECharacteristic *sensorCharacteristic;
 
 void setup_ble() {
     BLEDevice::init(("SmartGarden - " + String(getDeviceName())).c_str());
@@ -20,11 +25,13 @@ void setup_ble() {
     );
     deviceCharacteristic->setCallbacks(new DeviceCallbacks());
 
-    BLECharacteristic *sensorCharacteristic = pService->createCharacteristic(
+    sensorCharacteristic = pService->createCharacteristic(
         SENSORS_CHARACTERISTIC_UUID,
-        BLECharacteristic::PROPERTY_READ
+        BLECharacteristic::PROPERTY_READ |
+        BLECharacteristic::PROPERTY_NOTIFY
     );
     sensorCharacteristic->setCallbacks(new SensorCallbacks());
+    sensorCharacteristic->addDescriptor(new BLE2902());
 
     pService->start();
 
@@ -39,6 +46,17 @@ void setup_ble() {
     Serial.println("BLE advertising started");
 }
 
+wifi_status_t last_wifi_status;
+void ble_loop() {
+    wifi_status_t status = get_wifi_status();
+    if(status != last_wifi_status){
+        String json = stringify_wifi(status);
+        sensorCharacteristic->setValue(json.c_str());
+        sensorCharacteristic->notify();
+    }
+
+    last_wifi_status = status;
+}
 
 void start_ble_server() {
 
@@ -47,8 +65,4 @@ void start_ble_server() {
 void stop_ble_server() {
     BLEDevice::deinit(true);
     log("BLE server stopped");
-}
-
-void ble_loop() {
-    // Handle BLE events
 }

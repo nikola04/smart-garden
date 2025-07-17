@@ -27,7 +27,7 @@ void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
 
     if (!doc["device_name"].isNull()) setDeviceName(doc["device_name"].as<const char*>());
     if (!doc["wifi_ssid"].isNull()) setWifiSSID(doc["wifi_ssid"].as<const char*>());
-    if (!doc["wifi_pswd"].isNull()) setWifiPassword(doc["wifi_pswd"].as<const char*>());
+    if (!doc["wifi_password"].isNull()) setWifiPassword(doc["wifi_password"].as<const char*>());
     if (!doc["api_key"].isNull()) setAPIKey(doc["api_key"].as<const char*>());
 
     pChar->setValue("OK");

@@ -6,6 +6,9 @@
 String getDeviceName();
 void setDeviceName(const String& ssid);
 
+String getPowerMode();
+void setPowerMode(const String& mode);
+
 String getWifiSSID();
 void setWifiSSID(const String& ssid);
 

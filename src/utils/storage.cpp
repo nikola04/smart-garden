@@ -18,14 +18,6 @@ void setPreference(const String &key, const String &value) {
     prefs.end();
 }
 
-String getWifiSSID() {
-    return getPreference("wifi_ssid");
-}
-
-void setWifiSSID(const String &ssid) {
-    setPreference("wifi_ssid", ssid);
-}
-
 String getDeviceName() {
     String name = getPreference("device_name");
     if(name && name.length() > 2) 
@@ -37,6 +29,22 @@ String getDeviceName() {
 
 void setDeviceName(const String &name) {
     setPreference("device_name", name);
+}
+
+String getPowerMode() {
+    return getPreference("power_mode");
+}
+
+void setPowerMode(const String &mode) {
+    setPreference("power_mode", mode);
+}
+
+String getWifiSSID() {
+    return getPreference("wifi_ssid");
+}
+
+void setWifiSSID(const String &ssid) {
+    setPreference("wifi_ssid", ssid);
 }
 
 String getWifiPassword() {

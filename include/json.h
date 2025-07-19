@@ -2,6 +2,7 @@
 #ifndef JSON_H
 #define JSON_H
 
-String stringify_wifi(wifi_status_t);
+String stringifyWiFiStatus(wifi_status_t);
+String stringifyWiFiNetwork(String, int);
 
 #endif // JSON_H

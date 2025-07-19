@@ -20,5 +20,8 @@ class SensorCallbacks : public BLECharacteristicCallbacks {
     void onRead(BLECharacteristic* pChar) override;
 };
 
+class WifiCallbacks : public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic* pChar) override;
+};
 
 #endif // CALLBACKS_H

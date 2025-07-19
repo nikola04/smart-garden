@@ -9,6 +9,7 @@
 #include "Wire.h"
 #include "Adafruit_SSD1306.h"
 #include "storage.h"
+#include "wireless.h"
 #include "Arduino.h"
 
 static int wakeup_function = -1;
@@ -26,6 +27,9 @@ void setup() {
     Wire.begin(I2C_SDA, I2C_SCL);
     pinMode(GPIO_BUTTON_PIN, INPUT_PULLUP);
 
+    // Setup wireless
+    initWireless();
+
     waiting_wifi = true;
     set_display_data(read_power_data(), read_sensors());
 
@@ -39,7 +43,6 @@ void setup() {
 
     // Initialize BLE
     setup_ble();
-    start_ble_server();
 
     // Deep sleep configuration
     // constexpr uint64_t WAKEUP_TIMER_US = DEEPSLEEP_TIME_S * 1000000ULL;

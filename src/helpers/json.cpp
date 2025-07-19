@@ -1,6 +1,6 @@
 #include "json.h"
 
-String stringify_wifi(wifi_status_t wifi){
+String stringifyWiFiStatus(wifi_status_t wifi){
     String wifi_status = "disconnected";;
     if (wifi == WIFI_CONNECTED)
         wifi_status = "connected";
@@ -9,6 +9,15 @@ String stringify_wifi(wifi_status_t wifi){
         
     String json = "{";
     json += "\"wifi\":\"" + wifi_status + "\"";
+    json += "}";
+
+    return json.c_str();
+}
+
+String stringifyWiFiNetwork(String ssid, int rssi){
+    String json = "{";
+    json += "\"ssid\":\"" + ssid + "\",";
+    json += "\"rssi\":\"" + String(rssi) + "\"";
     json += "}";
 
     return json.c_str();

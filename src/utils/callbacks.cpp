@@ -2,6 +2,8 @@
 #include "sensors.h"
 #include "power.h"
 #include "network.h"
+#include "wireless.h"
+#include "wifi_scan.h"
 
 bool deviceConnected = false;
 
@@ -26,20 +28,27 @@ void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
     }
 
     if (!doc["device_name"].isNull()) setDeviceName(doc["device_name"].as<const char*>());
+    if (!doc["power_mode"].isNull()) setPowerMode(doc["power_mode"].as<const char*>());
     if (!doc["wifi_ssid"].isNull()) setWifiSSID(doc["wifi_ssid"].as<const char*>());
     if (!doc["wifi_password"].isNull()) setWifiPassword(doc["wifi_password"].as<const char*>());
     if (!doc["api_key"].isNull()) setAPIKey(doc["api_key"].as<const char*>());
 
     pChar->setValue("OK");
+
+    if (!doc["wifi_ssid"].isNull() || !doc["wifi_password"].isNull()){
+        reconnectWiFi();
+    }
+
     log("Configuration updated");
 }
 
 void DeviceCallbacks::onRead(BLECharacteristic *pChar) {
     String json = "{";
     json += "\"device_name\":\"" + getDeviceName() + "\",";
+    json += "\"power_mode\":\"" + getPowerMode() + "\",";
     json += "\"wifi_ssid\":\"" + getWifiSSID() + "\",";
     json += "\"wifi_password\":\"" + getWifiPassword() + "\",";
-    json += "\"api_key\":\"\""; // one-time visible
+    json += "\"api_key\":\"null\""; // one-time visible
     json += "}";
 
     pChar->setValue(json.c_str());
@@ -69,4 +78,13 @@ void SensorCallbacks::onRead(BLECharacteristic *pChar) {
     json += "}";
 
     pChar->setValue(json.c_str());
+}
+
+void WifiCallbacks::onWrite(BLECharacteristic *pChar){
+    std::string value = pChar->getValue();
+
+    if(value == "scan"){
+        startWiFiScanAsync();
+        return;
+    }
 }

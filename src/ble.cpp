@@ -66,19 +66,18 @@ void ble_loop() {
             wifiCharacteristic->notify();
             endWiFiScan();
         }else if(wifiStatus == 0){
-            int index = getWiFiNextResultIndex();
-            if(index == -1){
-                wifiCharacteristic->setValue("done");
-                wifiCharacteristic->notify();
-                endWiFiScan();
-            }else{
-                String ssid = getWiFiResultSSID(index);
-                int rssi = getWiFiResultRSSI(index);
+            int n = getWiFiResultsCount();
+            for(int i = 0; i < n; i++){
+                String ssid = getWiFiResultSSID(i);
+                int rssi = getWiFiResultRSSI(i);
                 String json = stringifyWiFiNetwork(ssid, rssi);
 
                 wifiCharacteristic->setValue(json.c_str());
                 wifiCharacteristic->notify();
             }
+            endWiFiScan();
+            wifiCharacteristic->setValue("done");
+            wifiCharacteristic->notify();
         }
     }
 

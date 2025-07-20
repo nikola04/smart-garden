@@ -1,7 +1,7 @@
 #include "sensors.h"
 #include "helpers.h"
 
-air_data_t read_air_sensor() {
+air_data_t readAirSensor() {
     air_data_t air_sensor;
 
     // Read the air sensor data
@@ -14,7 +14,7 @@ air_data_t read_air_sensor() {
     return air_sensor;
 }
 
-soil_data_t read_soil_sensors() {
+soil_data_t readSoilSensors() {
     soil_data_t soil_sensor;
 
     // Read the calibrated and calculated soil sensor data
@@ -30,7 +30,7 @@ soil_data_t read_soil_sensors() {
     return soil_sensor;
 }
 
-light_data_t read_light_sensor() {
+light_data_t readLightSensor() {
     light_data_t light_sensor;
 
     // Read the light sensor data
@@ -43,13 +43,13 @@ light_data_t read_light_sensor() {
     return light_sensor;
 }
 
-sensors_data_t read_sensors()
+sensors_data_t readSensors()
 {
     sensors_data_t sensors;
 
-    sensors.air = read_air_sensor();
-    sensors.soil = read_soil_sensors();
-    sensors.light = read_light_sensor();
+    sensors.air = readAirSensor();
+    sensors.soil = readSoilSensors();
+    sensors.light = readLightSensor();
 
     return sensors;
 }

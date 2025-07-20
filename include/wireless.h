@@ -4,6 +4,5 @@
 #include "storage.h"
 
 void initWireless(void);
-void reconnectWiFi(void);
 
 #endif // WIRELESS_H

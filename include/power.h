@@ -19,8 +19,8 @@ typedef struct power_data {
     solar_panel_t solar_panel;
 } power_data_t;
 
-battery_t read_battery_data();
-solar_panel_t read_solar_panel_data();
-power_data_t read_power_data();
+battery_t readBatteryData();
+solar_panel_t readSolarPanelData();
+power_data_t readPowerData();
 
 #endif // POWER_H

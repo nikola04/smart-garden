@@ -1,9 +1,8 @@
-#include "callbacks.h"
-#include "sensors.h"
+#include "ble.h"
+#include "json.h"
+#include "sensor.h"
 #include "power.h"
-#include "network.h"
-#include "wireless.h"
-#include "wifi_scan.h"
+#include "ArduinoJson.h"
 
 bool deviceConnected = false;
 
@@ -20,7 +19,7 @@ void ServerCallbacks::onDisconnect(BLEServer* pServer) {
 void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
     std::string value = pChar->getValue();
 
-    JsonDocument doc; // You might want to specify StaticJsonDocument<N> or DynamicJsonDocument
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, value);
     if (error) {
         pChar->setValue("ERR: Invalid JSON");
@@ -36,39 +35,33 @@ void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
     pChar->setValue("OK");
 
     if (!doc["wifi_ssid"].isNull() || !doc["wifi_password"].isNull()){
-        reconnectWiFi();
+        wifiReconnect();
     }
 
     log("Configuration updated");
 }
 
 void DeviceCallbacks::onRead(BLECharacteristic *pChar) {
-    String json = "{";
-    json += "\"device_name\":\"" + getDeviceName() + "\",";
-    json += "\"power_mode\":\"" + getPowerMode() + "\",";
-    json += "\"wifi_ssid\":\"" + getWifiSSID() + "\",";
-    json += "\"wifi_password\":\"" + getWifiPassword() + "\",";
-    json += "\"api_key\":\"null\""; // one-time visible
-    json += "}";
-
+    String json = stringifyDeviceConfig(getDeviceName(), getPowerMode(), getWifiSSID(), getWifiPassword());
+    
     pChar->setValue(json.c_str());
 }
 
 void SensorCallbacks::onRead(BLECharacteristic *pChar) {
-    sensors_data_t sensors = read_sensors();
-    power_data_t power = read_power_data();
-    wifi_status_t wifi = get_wifi_status();
-    String wifi_status;
+    sensors_data_t sensors = readSensors();
+    power_data_t power = readPowerData();
+    wifi_status_t wifi = wifiGetStatus();
+    String wifiStatus;
 
     if (wifi == WIFI_CONNECTED)
-        wifi_status = "connected";
+        wifiStatus = "connected";
     else if (wifi == WIFI_CONNECTING)
-        wifi_status = "connecting";
+        wifiStatus = "connecting";
     else
-        wifi_status = "disconnected";
+        wifiStatus = "disconnected";
 
     String json = "{";
-    json += "\"wifi\":\"" + wifi_status + "\",";
+    json += "\"wifi\":\"" + wifiStatus + "\",";
     json += "\"battery\":\"" + String(power.battery.level) + "\",";
     json += "\"charger\":\"" + String(power.solar_panel.current) + "\",";
     json += "\"air_temp\":\"" + String(sensors.air.temperature) + "\",";
@@ -84,7 +77,7 @@ void WifiCallbacks::onWrite(BLECharacteristic *pChar){
     std::string value = pChar->getValue();
 
     if(value == "scan"){
-        startWiFiScanAsync();
+        wifiStartScan();
         return;
     }
 }

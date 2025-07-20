@@ -1,9 +1,6 @@
 #include "draw.h"
-#include "display.h"
 
-void init_draw_utils(Adafruit_SSD1306 *display){
-    if(!is_display_on) return;
-
+void initDrawUtils(Adafruit_SSD1306 *display){
     display->clearDisplay();
     display->display();
     display->setTextSize(2);
@@ -11,18 +8,16 @@ void init_draw_utils(Adafruit_SSD1306 *display){
     display->setCursor(0, 0);
 }
 
-void draw_text(Adafruit_SSD1306 *display, const char *string){
+void drawText(Adafruit_SSD1306 *display, const char *string){
     display->setCursor(32, 10);
     display->println(string);
     display->display();
 }
 
-void draw_template(Adafruit_SSD1306 *display){
-    if(!is_display_on) return;
-
+void drawTemplate(Adafruit_SSD1306 *display){
     display->clearDisplay();
     // wifi sunny temp       charging battery
-    draw_wifi_status(display, get_wifi_status());
+    drawWiFiStatus(display, wifiGetStatus());
     display->display();
 }
 
@@ -42,7 +37,7 @@ void drawArc(Adafruit_SSD1306 *display, int cx, int cy, int radius, int start_an
 }
 
 static int connecting_icon_state = 0;
-void draw_wifi_status(Adafruit_SSD1306 *display, wifi_status_t status){
+void drawWiFiStatus(Adafruit_SSD1306 *display, wifi_status_t status){
     int x = 12;
     int y = 12;
 
@@ -74,22 +69,18 @@ void draw_wifi_status(Adafruit_SSD1306 *display, wifi_status_t status){
     }
 }
 
-void draw_battery_status(Adafruit_SSD1306 *display, int level, bool charging){
+void drawBatteryStatus(Adafruit_SSD1306 *display, int level, bool charging){
 }
 
-void draw_sun_icon(Adafruit_SSD1306 *display, bool sunny){
+void drawSunIcon(Adafruit_SSD1306 *display, bool sunny){
     int x = 32;
     int y = 10;
-    switch (sunny){
-        case true:
-            display->fillCircle(x, y, 4, WHITE);
-            break;
-        case false:
-        default:
-            drawArc(display, x, y, 4, 120, 220);
-            break;
+    if(sunny){
+        display->fillCircle(x, y, 4, WHITE);
+    } else{
+        drawArc(display, x, y, 4, 120, 220);
     }
 }
 
-void draw_temperature(Adafruit_SSD1306 *display, float temp){
+void drawTemperature(Adafruit_SSD1306 *display, float temp){
 }

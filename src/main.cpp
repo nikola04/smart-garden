@@ -1,24 +1,17 @@
 #include "main.h"
 #include "config.h"
-#include "types.h"
 #include "ble.h"
-#include "sensors.h"
-#include "power.h"
 #include "network.h"
 #include "display.h"
-#include "Wire.h"
-#include "Adafruit_SSD1306.h"
 #include "storage.h"
 #include "wireless.h"
-#include "Arduino.h"
+#include "logger.h"
 
-static int wakeup_function = -1;
-static bool waiting_wifi = false;
-static ulong last_press = 0;
+static int wakeupFunction = -1;
+static bool waitingWifi = false;
+static ulong lastPress = 0;
 
-void log(const char *message) {
-    Serial.println(message);
-}
+DisplayManager displayManager;
 
 void setup() {
     Serial.begin(SERIAL_BAUD);
@@ -30,19 +23,16 @@ void setup() {
     // Setup wireless
     initWireless();
 
-    waiting_wifi = true;
-    set_display_data(read_power_data(), read_sensors());
+    // WiFi connection
+    waitingWifi = true;
+    wifiConnect(getWifiSSID(), getWifiPassword());
 
-    String ssid = getWifiSSID();
-    String pswd = getWifiPassword();
-    log(ssid.c_str());
-    log(pswd.c_str());
-
-    connect_to_wifi(ssid, pswd);
-    display_power_on();
+    // Initialize display
+    displayManager.setData(readPowerData(), readSensors());
+    displayManager.powerOn();
 
     // Initialize BLE
-    setup_ble();
+    setupBLE();
 
     // Deep sleep configuration
     // constexpr uint64_t WAKEUP_TIMER_US = DEEPSLEEP_TIME_S * 1000000ULL;
@@ -54,25 +44,25 @@ void setup() {
 }
 
 void loop(){
-    wifi_connect_loop();
-    display_check_wifi_status_loop();
-    if(waiting_wifi && get_wifi_status() == WIFI_CONNECTED){
-        waiting_wifi = false;
-        handle_wifi_connected();
+    wifiConnectionLoop();
+    displayManager.checkWiFiStatus();
+    if(waitingWifi && wifiGetStatus() == WIFI_CONNECTED){
+        waitingWifi = false;
+        handleWifiConnected();
     }
-    button_press_loop();
-    ble_loop();
-    // sleep_timeout_loop();
+    buttonPressLoop();
+    loopBLE();
+    // sleepTimeoutLoop();
 }
 
 // check if inactive for a while to go to sleep
-void sleep_timeout_loop(){
-    if(millis() - last_press < INACTIVE_TIME_MS) return;
-    handle_sleep();
+void sleepTimeoutLoop(){
+    if(millis() - lastPress < INACTIVE_TIME_MS) return;
+    handleSleep();
 }
 
 // handle button states
-void button_press_loop(){
+void buttonPressLoop(){
     static ulong press_start = 0;
     static bool pressed = false;
     if(!pressed && digitalRead(GPIO_BUTTON_PIN) == HIGH){
@@ -81,82 +71,82 @@ void button_press_loop(){
         return;
     }
     if(pressed && digitalRead(GPIO_BUTTON_PIN) == LOW){
-        last_press = millis();
+        lastPress = millis();
         pressed = false;
-        ulong press_duration = last_press - press_start;
-        if(press_duration < 30) return; // debounce
-        if(press_duration >= LONG_PRESS_DURATION_MS){ // long press
-            handle_sleep();
+        ulong pressDuration = lastPress - press_start;
+        if(pressDuration < 30) return; // debounce
+        if(pressDuration >= LONG_PRESS_DURATION_MS){ // long press
+            handleSleep();
             return;
         }
-        handle_button_press();
+        handleButtonPress();
     }
 }
 
 // on short button press
-void handle_button_press(){
-    cycle_display();
+void handleButtonPress(){
+    displayManager.cycle();
 }
 
 // when wifi connected send data and go to sleep if needed
-void handle_wifi_connected(){
+void handleWifiConnected(){
     log("WiFi connected");
 
-    if(send_data(read_sensors(), read_power_data()) != 0){
+    if(sendData(readSensors(), readPowerData()) != 0){
         log("Failed to send data");
-        display_notification("Fail!");
+        displayManager.showNotification("Fail!");
         return;
     }
     log("Data sent successfully");
-    display_notification("Sent!");
+    displayManager.showNotification("Sent!");
 
-    if(wakeup_function == 0){
+    if(wakeupFunction == 0){
         // handle_sleep();
         return;
     }
 }
 
-void handle_wakeup(esp_sleep_wakeup_cause_t wakeup_reason){
-    const char *wifi_ssid = getWifiSSID().c_str();
-    const char *wifi_pswd = getWifiPassword().c_str();
-    connect_to_wifi(wifi_ssid, wifi_pswd);
+void handleWakeup(esp_sleep_wakeup_cause_t wakeup_reason){
+    const char *wifiSsid = getWifiSSID().c_str();
+    const char *wifiPswd = getWifiPassword().c_str();
+    wifiConnect(wifiSsid, wifiPswd);
     log("Connecting to WiFi");
-    waiting_wifi = true;
+    waitingWifi = true;
 
     if(wakeup_reason == ESP_SLEEP_WAKEUP_TIMER){
         log("Woke up from timer");
-        wakeup_function = 0;
+        wakeupFunction = 0;
         return;
     }
     if(wakeup_reason == ESP_SLEEP_WAKEUP_EXT1){
         delay(LONG_PRESS_DURATION_MS / 2); // debounce - wait for half long press
         if(digitalRead(GPIO_BUTTON_PIN) == LOW) {
-            handle_sleep();
+            handleSleep();
             return;
         }
         log("Woke up from external interrupt");
-        wakeup_function = 1;
+        wakeupFunction = 1;
 
-        sensors_data_t sensors = read_sensors();
-        power_data_t power = read_power_data();
+        sensors_data_t sensors = readSensors();
+        power_data_t power = readPowerData();
 
-        set_display_data(power, sensors);
-        display_power_on();
+        displayManager.setData(power, sensors);
+        displayManager.powerOn();
         return;
     }
     if(wakeup_reason == ESP_SLEEP_WAKEUP_UNDEFINED){
         log("Woke up from undefined reason");
-        handle_sleep();
+        handleSleep();
         return;
     }
 }
 
-void handle_sleep(){
+void handleSleep(){
     log("Going back to sleep");
-    stop_ble_server();
-    wakeup_function = -1;
-    display_power_off();
-    wifi_off();
+    stopBLE();
+    wakeupFunction = -1;
+    displayManager.powerOff();
+    wifiDisable();
     Serial.flush();
     esp_deep_sleep_start();
 }

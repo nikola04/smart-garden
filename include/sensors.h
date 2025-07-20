@@ -24,9 +24,9 @@ typedef struct sensors {
     light_data_t light;
 } sensors_data_t;
 
-air_data_t read_air_sensor();
-soil_data_t read_soil_sensors();
-light_data_t read_light_sensor();
-sensors_data_t read_sensors();
+air_data_t readAirSensor();
+soil_data_t readSoilSensors();
+light_data_t readLightSensor();
+sensors_data_t readSensors();
 
 #endif // SENSORS_H

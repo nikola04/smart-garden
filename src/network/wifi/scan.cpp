@@ -1,10 +1,10 @@
-#include "wifi_scan.h"
+#include "network.h"
 #include "main.h"
 
 bool scanning = false;
 int lastIndex = 0;
 
-void startWiFiScanAsync(){
+void wifiStartScan(){
     if(scanning) 
         return;
 
@@ -16,7 +16,7 @@ void startWiFiScanAsync(){
 }
 
 // -3 not scanning, -2 fail, -1 scanning, 0 scanned
-int getWiFiScanStatus(){
+int wifiGetScanStatus(){
     if(!scanning)
         return -3;
 
@@ -27,7 +27,7 @@ int getWiFiScanStatus(){
     return n;
 }
 
-int getWiFiResultsCount(){
+int wifiGetResultsCount(){
     int n = WiFi.scanComplete();
     if(n >= 0)
         return n;
@@ -35,15 +35,15 @@ int getWiFiResultsCount(){
     return -1;
 }
 
-String getWiFiResultSSID(int index){
+String wifiGetResultSSID(int index){
     return WiFi.SSID(index);
 }
 
-int getWiFiResultRSSI(int index){
+int wifiGetResultRSSI(int index){
     return WiFi.RSSI(index);
 }
 
-void endWiFiScan(){
+void wifiEndScan(){
     if(!scanning)
         return;
     

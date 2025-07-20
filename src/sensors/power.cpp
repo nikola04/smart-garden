@@ -1,6 +1,6 @@
 #include "power.h"
 
-battery_t read_battery_data(){
+battery_t readBatteryData(){
     battery_t battery;
 
     battery.level = 0.0f;
@@ -9,7 +9,7 @@ battery_t read_battery_data(){
     return battery;
 }
 
-solar_panel_t read_solar_panel_data(){
+solar_panel_t readSolarPanelData(){
     solar_panel_t solar_panel;
 
     solar_panel.voltage = 0;
@@ -19,11 +19,11 @@ solar_panel_t read_solar_panel_data(){
     return solar_panel;
 }
 
-power_data_t read_power_data(){
+power_data_t readPowerData(){
     power_data_t power;
 
-    power.battery = read_battery_data();
-    power.solar_panel = read_solar_panel_data();
+    power.battery = readBatteryData();
+    power.solar_panel = readSolarPanelData();
 
     return power;
 }

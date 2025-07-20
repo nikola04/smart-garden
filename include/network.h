@@ -1,9 +1,9 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include "WiFi.h"
 #include "sensors.h"
 #include "power.h"
-#include "Arduino.h"
 
 enum wifi_status_t {
     WIFI_CONNECTING = 1,
@@ -11,11 +11,22 @@ enum wifi_status_t {
     WIFI_DISCONNECTED = 0,
 };
 
-wifi_status_t get_wifi_status();
-int connect_to_wifi(String ssid, String password);
-int wifi_off();
-void wifi_connect_loop();
-int send_data(sensors_data_t sdata, power_data_t pdata);
-String json_stringify(sensors_data_t sdata, power_data_t pdata);
+// wifi/connect.cpp
+wifi_status_t wifiGetStatus();
+int wifiConnect(String ssid, String password);
+int wifiDisable();
+void wifiConnectionLoop();
+void wifiReconnect(void);
+
+// wifi/scan.cpp
+void wifiStartScan();
+int wifiGetScanStatus();
+int wifiGetResultsCount();
+String wifiGetResultSSID(int index);
+int wifiGetResultRSSI(int index);
+void wifiEndScan();
+
+// api/uploader.cpp
+int sendData(sensors_data_t sdata, power_data_t pdata);
 
 #endif // NETWORK_H

@@ -1,18 +1,12 @@
-#include "main.h"
 #include "ble.h"
-#include "config.h"
-#include "storage.h"
-#include "BLEDevice.h"
 #include "BLE2902.h"
-#include "callbacks.h"
-#include "network.h"
+#include "config.h"
 #include "json.h"
-#include "wifi_scan.h"
 
 BLECharacteristic *sensorCharacteristic;
 BLECharacteristic *wifiCharacteristic;
 
-void setup_ble() {
+void setupBLE() {
     BLEDevice::init(("SmartGarden - " + String(getDeviceName())).c_str());
     BLEServer* pServer = BLEDevice::createServer();
 
@@ -56,47 +50,47 @@ void setup_ble() {
     Serial.println("BLE advertising started");
 }
 
-wifi_status_t last_wifi_status;
-void ble_loop() {
+wifi_status_t lastWifiStatus;
+void loopBLE() {
     // wifi scan
     int wifiStatus;
-    if((wifiStatus = getWiFiScanStatus()) != -3){
+    if((wifiStatus = wifiGetScanStatus()) != -3){
         if(wifiStatus == -2){
             wifiCharacteristic->setValue("fail");
             wifiCharacteristic->notify();
-            endWiFiScan();
+            wifiEndScan();
         }else if(wifiStatus == 0){
-            int n = getWiFiResultsCount();
+            int n = wifiGetResultsCount();
             for(int i = 0; i < n; i++){
-                String ssid = getWiFiResultSSID(i);
-                int rssi = getWiFiResultRSSI(i);
+                String ssid = wifiGetResultSSID(i);
+                int rssi = wifiGetResultRSSI(i);
                 String json = stringifyWiFiNetwork(ssid, rssi);
 
                 wifiCharacteristic->setValue(json.c_str());
                 wifiCharacteristic->notify();
             }
-            endWiFiScan();
+            wifiEndScan();
             wifiCharacteristic->setValue("done");
             wifiCharacteristic->notify();
         }
     }
 
     // wifi status
-    wifi_status_t status = get_wifi_status();
-    if(status != last_wifi_status){
+    wifi_status_t status = wifiGetStatus();
+    if(status != lastWifiStatus){
         String json = stringifyWiFiStatus(status);
         sensorCharacteristic->setValue(json.c_str());
         sensorCharacteristic->notify();
     }
 
-    last_wifi_status = status;
+    lastWifiStatus = status;
 }
 
-void start_ble_server() {
+void startBLE() {
 
 }
 
-void stop_ble_server() {
+void stopBLE() {
     BLEDevice::deinit(true);
     log("BLE server stopped");
 }

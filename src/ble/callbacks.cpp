@@ -2,6 +2,7 @@
 #include "json.h"
 #include "sensor.h"
 #include "power.h"
+#include "system.h"
 #include "ArduinoJson.h"
 
 bool deviceConnected = false;
@@ -14,6 +15,30 @@ void ServerCallbacks::onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->start();
+}
+
+void SystemCallbacks::onWrite(BLECharacteristic *pChar){
+    std::string value = pChar->getValue();
+
+    if(value == "sleep"){
+        esp_timer_handle_t timer;
+        esp_timer_create_args_t args = {
+            .callback = &triggerDeepSleep,
+            .arg = nullptr,
+            .name = "sleep_delay"
+        };
+        esp_timer_create(&args, &timer);
+        esp_timer_start_once(timer, 200 * 1000);
+    } else if(value == "restart"){
+        esp_timer_handle_t timer;
+        esp_timer_create_args_t args = {
+            .callback = &triggerRestart,
+            .arg = nullptr,
+            .name = "restart_delay"
+        };
+        esp_timer_create(&args, &timer);
+        esp_timer_start_once(timer, 200 * 1000);
+    }
 }
 
 void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {

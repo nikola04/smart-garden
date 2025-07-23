@@ -14,6 +14,12 @@ void setupBLE() {
 
     BLEService *pService = pServer->createService(SERVICE_UUID);
 
+    BLECharacteristic *systemCharacteristic = pService->createCharacteristic(
+        SYSTEM_CHARACTERISTIC_UUID,
+        BLECharacteristic::PROPERTY_WRITE
+    );
+    systemCharacteristic->setCallbacks(new SystemCallbacks());
+
     BLECharacteristic *deviceCharacteristic = pService->createCharacteristic(
         DEVICE_CHARACTERISTIC_UUID,
         BLECharacteristic::PROPERTY_READ |

@@ -16,6 +16,10 @@ class ServerCallbacks : public BLEServerCallbacks {
     void onDisconnect(BLEServer* pServer) override;
 };
 
+class SystemCallbacks : public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic* pChar) override;
+};
+
 class DeviceCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic* pChar) override;
     void onRead(BLECharacteristic* pChar) override;

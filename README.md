@@ -9,7 +9,7 @@ Arduino library, BLE Server
 
 #### ESP32 Mobile:
   - Connects to ESP32, Managing WiFi & API key, Live sensor data...
-  - [github.com/nikola04/smart-garden-mobile/](https://github.com/nikola04/smart-garden-mobile/)
+  - [github.com/nikola04/smart-garden-mobile](https://github.com/nikola04/smart-garden-mobile/)
     
 #### API Server:
   - Managing user projects, Project Devices, Authorization, Analythic Data...

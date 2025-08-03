@@ -1,15 +1,25 @@
+#include "logger.h"
+#include "bmp180.h"
 #include "sensors.h"
 #include "helpers.h"
+
+static BMP180 bmp180;
+
+void initSensors() {
+    bmp180.begin();
+}
 
 air_data_t readAirSensor() {
     air_data_t air_sensor;
 
     // Read the air sensor data
-    int temp = 21;
+    float temp = bmp180.getTemperature();
+    float pressure = bmp180.getPressure();
     int humidity = 50;
 
     air_sensor.temperature = temp;
     air_sensor.humidity = humidity;
+    air_sensor.pressure = pressure;
 
     return air_sensor;
 }

@@ -3,21 +3,23 @@
 void initDrawUtils(Adafruit_SSD1306 *display){
     display->clearDisplay();
     display->display();
-    display->setTextSize(2);
     display->setTextColor(WHITE);
+    display->setFont();
     display->setCursor(0, 0);
 }
 
 void drawText(Adafruit_SSD1306 *display, const char *string){
-    display->setCursor(32, 10);
+    display->setTextSize(1);
+    display->setCursor(24, 10);
     display->println(string);
     display->display();
 }
 
-void drawTemplate(Adafruit_SSD1306 *display){
+void drawTemplate(Adafruit_SSD1306 *display, float temp){
     display->clearDisplay();
     // wifi sunny temp       charging battery
     drawWiFiStatus(display, wifiGetStatus());
+    drawTemperature(display, temp);
     display->display();
 }
 
@@ -38,19 +40,19 @@ void drawArc(Adafruit_SSD1306 *display, int cx, int cy, int radius, int start_an
 
 static int connecting_icon_state = 0;
 void drawWiFiStatus(Adafruit_SSD1306 *display, wifi_status_t status){
-    int x = 12;
-    int y = 12;
+    int x = 8;
+    int y = 10;
 
     switch(status){
         case WIFI_CONNECTED:
-            drawArc(display, x, y, 12, 220, 320);
-            drawArc(display, x, y, 8, 210, 330);
+            drawArc(display, x, y, 10, 210, 330);
+            drawArc(display, x, y, 6, 210, 330);
             display->fillCircle(x, y, 2, WHITE);
             break;
 
         case WIFI_CONNECTING:
             if(connecting_icon_state == 1){
-                drawArc(display, x, y, 8, 210, 330);
+                drawArc(display, x, y, 6, 210, 330);
             }
             display->fillCircle(x, y, 2, WHITE);
             connecting_icon_state = (connecting_icon_state + 1) % 2;
@@ -58,13 +60,13 @@ void drawWiFiStatus(Adafruit_SSD1306 *display, wifi_status_t status){
 
         case WIFI_DISCONNECTED:
         default:
-            drawArc(display, x, y, 12, 210, 330);
-            drawArc(display, x, y, 8, 210, 330);
+            drawArc(display, x, y, 10, 210, 330);
+            drawArc(display, x, y, 6, 210, 330);
             display->fillCircle(x, y, 2, WHITE);
-            int x_offset = x + 5;
-            int y_offset = y - 2;
-            display->drawLine(x_offset, y_offset, x_offset + 6, y_offset + 6, WHITE);
-            display->drawLine(x_offset + 6, y_offset, x_offset, y_offset + 6, WHITE);
+            int x_offset = x + 4;
+            int y_offset = y - 1;
+            display->drawLine(x_offset, y_offset, x_offset + 5, y_offset + 5, WHITE);
+            display->drawLine(x_offset + 5, y_offset, x_offset, y_offset + 5, WHITE);
             break;
     }
 }
@@ -83,4 +85,18 @@ void drawSunIcon(Adafruit_SSD1306 *display, bool sunny){
 }
 
 void drawTemperature(Adafruit_SSD1306 *display, float temp){
+    display->setTextSize(1);
+    display->setTextColor(SSD1306_WHITE);
+
+    String tempStr = String(temp, 1) + " " + (char)248 + "C"; // e.g. "27.3 °C"
+
+    int16_t x1, y1;
+    uint16_t w, h;
+    display->getTextBounds(tempStr, 0, 0, &x1, &y1, &w, &h);
+
+    int16_t x = 128 - w - 2;
+    int16_t y = 0;
+
+    display->setCursor(x, y);
+    display->print(tempStr);
 }

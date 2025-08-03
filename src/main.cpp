@@ -6,6 +6,7 @@
 #include "storage.h"
 #include "wireless.h"
 #include "logger.h"
+#include <driver/rtc_io.h>
 
 static int wakeupFunction = -1;
 static bool waitingWifi = false;
@@ -20,63 +21,71 @@ void setup() {
     Wire.begin(I2C_SDA, I2C_SCL);
     pinMode(GPIO_BUTTON_PIN, INPUT_PULLUP);
 
+    // Init sensors
+    initSensors();
+
     // Setup wireless
     initWireless();
 
     // WiFi connection
-    waitingWifi = true;
-    wifiConnect(getWifiSSID(), getWifiPassword());
+    initWifi(getWifiSSID(), getWifiPassword());
 
     // Initialize display
     displayManager.setData(readPowerData(), readSensors());
-    displayManager.powerOn();
 
     // Initialize BLE
     setupBLE();
 
     // Deep sleep configuration
-    // constexpr uint64_t WAKEUP_TIMER_US = DEEPSLEEP_TIME_S * 1000000ULL;
-    // esp_sleep_enable_ext1_wakeup(1ULL << GPIO_BUTTON_PIN, ESP_EXT1_WAKEUP_ANY_HIGH);
-    // esp_sleep_enable_timer_wakeup(WAKEUP_TIMER_US);
+    constexpr uint64_t WAKEUP_TIMER_US = DEEPSLEEP_TIME_S * 1000000ULL;
+    esp_sleep_enable_ext0_wakeup((gpio_num_t) GPIO_BUTTON_PIN, 0);
+    esp_sleep_enable_timer_wakeup(WAKEUP_TIMER_US);
 
-    // esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
-    // handle_wakeup(wakeup_reason);
+    esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+    handleWakeup(wakeup_reason);
 }
 
 void loop(){
     wifiConnectionLoop();
-    displayManager.checkWiFiStatus();
+    displayManager.loop();
     if(waitingWifi && wifiGetStatus() == WIFI_CONNECTED){
-        waitingWifi = false;
         handleWifiConnected();
+        waitingWifi = false;
     }
-    buttonPressLoop();
     loopBLE();
-    // sleepTimeoutLoop();
+    sleepTimeoutLoop();
+    buttonPressLoop();
 }
 
 // check if inactive for a while to go to sleep
 void sleepTimeoutLoop(){
     if(millis() - lastPress < INACTIVE_TIME_MS) return;
+    if(waitingWifi) return;
     handleSleep();
 }
 
 // handle button states
 void buttonPressLoop(){
+    static bool wakeup_button_state = true; // assume that button is not released after wakeup
     static ulong press_start = 0;
     static bool pressed = false;
-    if(!pressed && digitalRead(GPIO_BUTTON_PIN) == HIGH){
+    int pinValue = digitalRead(GPIO_BUTTON_PIN);
+
+    if(wakeup_button_state && pinValue == LOW) return; // still not released
+    if(wakeup_button_state) wakeup_button_state = false;
+
+    if(!pressed && pinValue == LOW){ // first press
         pressed = true;
         press_start = millis();
         return;
     }
-    if(pressed && digitalRead(GPIO_BUTTON_PIN) == LOW){
+    if(pressed && pinValue == HIGH){ // release
         lastPress = millis();
         pressed = false;
         ulong pressDuration = lastPress - press_start;
         if(pressDuration < 30) return; // debounce
         if(pressDuration >= LONG_PRESS_DURATION_MS){ // long press
-            handleSleep();
+            handleButtonLongPress();
             return;
         }
         handleButtonPress();
@@ -85,31 +94,48 @@ void buttonPressLoop(){
 
 // on short button press
 void handleButtonPress(){
+    log("press");
     displayManager.cycle();
+}
+
+// on short button press
+void handleButtonLongPress(){
+    log("long press");
+    handleSleep();
 }
 
 // when wifi connected send data and go to sleep if needed
 void handleWifiConnected(){
     log("WiFi connected");
 
+    displayManager.showNotification("Sending..");
     if(sendData(readSensors(), readPowerData()) != 0){
         log("Failed to send data");
         displayManager.showNotification("Fail!");
-        return;
+    }else {
+        log("Data sent successfully");
+        displayManager.showNotification("Sent!");
     }
-    log("Data sent successfully");
-    displayManager.showNotification("Sent!");
 
     if(wakeupFunction == 0){
-        // handle_sleep();
-        return;
+        handleSleep();
     }
 }
 
 void handleWakeup(esp_sleep_wakeup_cause_t wakeup_reason){
-    const char *wifiSsid = getWifiSSID().c_str();
-    const char *wifiPswd = getWifiPassword().c_str();
-    wifiConnect(wifiSsid, wifiPswd);
+    if(wakeup_reason == ESP_SLEEP_WAKEUP_UNDEFINED){
+        handleSleep();
+        return;
+    }
+    if(wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
+        delay(LONG_PRESS_DURATION_MS / 2); // debounce - wait for a half of long press
+        if(digitalRead(GPIO_BUTTON_PIN) == HIGH) {
+            handleSleep();
+            return;
+        }
+    }
+
+    wifiConnect();
     log("Connecting to WiFi");
     waitingWifi = true;
 
@@ -118,12 +144,7 @@ void handleWakeup(esp_sleep_wakeup_cause_t wakeup_reason){
         wakeupFunction = 0;
         return;
     }
-    if(wakeup_reason == ESP_SLEEP_WAKEUP_EXT1){
-        delay(LONG_PRESS_DURATION_MS / 2); // debounce - wait for half long press
-        if(digitalRead(GPIO_BUTTON_PIN) == LOW) {
-            handleSleep();
-            return;
-        }
+    if(wakeup_reason == ESP_SLEEP_WAKEUP_EXT0){
         log("Woke up from external interrupt");
         wakeupFunction = 1;
 
@@ -132,11 +153,6 @@ void handleWakeup(esp_sleep_wakeup_cause_t wakeup_reason){
 
         displayManager.setData(power, sensors);
         displayManager.powerOn();
-        return;
-    }
-    if(wakeup_reason == ESP_SLEEP_WAKEUP_UNDEFINED){
-        log("Woke up from undefined reason");
-        handleSleep();
         return;
     }
 }

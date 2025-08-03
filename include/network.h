@@ -13,10 +13,10 @@ enum wifi_status_t {
 
 // wifi/connect.cpp
 wifi_status_t wifiGetStatus();
-int wifiConnect(String ssid, String password);
+void initWifi(String ssid, String password);
+int wifiConnect();
 int wifiDisable();
 void wifiConnectionLoop();
-void wifiReconnect(void);
 
 // wifi/scan.cpp
 void wifiStartScan();

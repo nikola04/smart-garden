@@ -4,12 +4,13 @@
 #include "types.h"
 
 typedef struct air_data {
-    float temperature; // Celsius
-    float humidity;    // %
+    float temperature;  // Celsius
+    float humidity;     // %
+    float pressure;     // hPa
 } air_data_t;
 
 typedef struct soil_data {
-    float moisture; // %
+    float moisture;     // %
     ushort sensors_used;
 } soil_data_t;
 
@@ -24,6 +25,7 @@ typedef struct sensors {
     light_data_t light;
 } sensors_data_t;
 
+void initSensors();
 air_data_t readAirSensor();
 soil_data_t readSoilSensors();
 light_data_t readLightSensor();

@@ -13,7 +13,7 @@ void DisplayManager::powerOn() {
 
     displayOn = true;
     initDrawUtils(&display);
-    drawTemplate(&display);
+    drawTemplate(&display, sensorData.air.temperature);
 }
 
 void DisplayManager::powerOff() {
@@ -30,12 +30,14 @@ bool DisplayManager::isOn() const {
 }
 
 void DisplayManager::refresh() {
-    drawTemplate(&display);
-    (this->*displayFunctions[currentMode])();
+    drawTemplate(&display, sensorData.air.temperature);
+    if(currentMode >= 0) {
+        (this->*displayFunctions[currentMode])();
+    }
     lastRefresh = millis();
 }
 
-void DisplayManager::checkWiFiStatus() {
+void DisplayManager::loop() {
     if (!displayOn) return;
 
     wifi_status_t currentStatus = wifiGetStatus();
@@ -48,10 +50,17 @@ void DisplayManager::checkWiFiStatus() {
 
 void DisplayManager::cycle() {
     currentMode = (currentMode + 1) % displayCount;
+    this->refresh();
+}
+
+void DisplayManager::displayText(const char* message) {
+    drawTemplate(&display, sensorData.air.temperature);
+    drawText(&display, message);
 }
 
 void DisplayManager::showNotification(const char* message) {
-    drawText(&display, message);
+    currentMode = -1;
+    this->displayText(message);
 }
 
 void DisplayManager::setData(const power_data_t& p, const sensors_data_t& s) {
@@ -59,7 +68,15 @@ void DisplayManager::setData(const power_data_t& p, const sensors_data_t& s) {
     sensorData = s;
 }
 
-void DisplayManager::drawPower() {}
-void DisplayManager::drawSoil() {}
-void DisplayManager::drawAir() {}
-void DisplayManager::drawBattery() {}
+void DisplayManager::drawPower() {
+    this->displayText("display: 1");
+}
+void DisplayManager::drawSoil() {
+    this->displayText("display: 2");
+}
+void DisplayManager::drawAir() {
+    this->displayText((String(sensorData.air.pressure) + " mbar").c_str());
+}
+void DisplayManager::drawBattery() {
+    this->displayText("display: 4");
+}

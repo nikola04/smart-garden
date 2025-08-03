@@ -6,7 +6,7 @@
 
 void initDrawUtils(Adafruit_SSD1306 *display);
 void drawText(Adafruit_SSD1306 *display, const char *string);
-void drawTemplate(Adafruit_SSD1306 *display);
+void drawTemplate(Adafruit_SSD1306 *display, float temp);
 void drawWiFiStatus(Adafruit_SSD1306 *display, wifi_status_t status);
 void drawBatteryStatus(Adafruit_SSD1306 *display, int level, bool charging);
 void drawSunIcon(Adafruit_SSD1306 *display, bool sunny);

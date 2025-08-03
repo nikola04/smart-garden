@@ -14,7 +14,7 @@ int sendData(sensors_data_t sdata, power_data_t pdata){
     String payload = stringifyAPIData(sdata, pdata);
 
     try{
-        http.begin(API_URL);
+        http.begin(DEFAULT_API_URL);
         http.addHeader("Content-Type", "application/json");
         http.addHeader("X-api-key", api_key);
         int responseCode = http.POST(payload);

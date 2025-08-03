@@ -56,7 +56,11 @@ void setWifiPassword(const String &password) {
 }
 
 String getAPIKey() {
-    return getPreference("api_key");
+    String apiKey = getPreference("api_key");
+    if(apiKey && apiKey.length() > 0)
+        return apiKey;
+
+    return DEFAULT_API_KEY;
 }
 
 void setAPIKey(const String &apiKey) {

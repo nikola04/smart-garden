@@ -12,16 +12,15 @@ wifi_status_t wifiGetStatus(){
     return wifiStatus;
 }
 
-int wifiConnect(String ssid, String password){
-    connectionStartTime = millis();
+void initWifi(String ssid, String password) {
     wifiSSID = ssid;
     wifiPassword = password;
-    WiFi.begin(ssid.c_str(), password.c_str());
-    return 0;
 }
 
-void wifiReconnect(void){
-    wifiConnect(getWifiSSID(), getWifiPassword());
+int wifiConnect(){
+    connectionStartTime = millis();
+    WiFi.begin(wifiSSID.c_str(), wifiPassword.c_str());
+    return 0;
 }
 
 void wifiConnectionLoop(){
@@ -47,7 +46,7 @@ void wifiConnectionLoop(){
             if(millis() - lastRetryTime > retry_delay){
                 lastRetryTime = millis();
                 retryCount++;
-                wifiConnect(wifiSSID, wifiPassword);
+                wifiConnect();
             }
         }else wifiStatus = WIFI_DISCONNECTED;
     }else wifiStatus = WIFI_CONNECTING;

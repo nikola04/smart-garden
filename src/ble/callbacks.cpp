@@ -60,7 +60,7 @@ void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
     pChar->setValue("OK");
 
     if (!doc["wifi_ssid"].isNull() || !doc["wifi_password"].isNull()){
-        wifiReconnect();
+        wifiConnect();
     }
 
     log("Configuration updated");

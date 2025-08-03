@@ -10,17 +10,18 @@
 class DisplayManager {
 public:
     DisplayManager();
+    void loop();
     void powerOn();
     void powerOff();
     bool isOn() const;
 
     void refresh();
-    void checkWiFiStatus();
     void cycle();
     void showNotification(const char* message);
     void setData(const power_data_t& powerData, const sensors_data_t& sensorData);
 
 private:
+    void displayText(const char* message);
     void drawPower();
     void drawSoil();
     void drawAir();

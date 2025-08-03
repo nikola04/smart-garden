@@ -46,6 +46,15 @@ void setup() {
 }
 
 void loop(){
+    static ulong lastUpdate = 0;
+    if(millis() - lastUpdate > 3000){
+        sensors_data_t sensors = readSensors();
+        power_data_t power = readPowerData();
+
+        displayManager.setData(power, sensors);
+        lastUpdate = millis();
+    }
+    
     wifiConnectionLoop();
     displayManager.loop();
     if(waitingWifi && wifiGetStatus() == WIFI_CONNECTED){
@@ -148,10 +157,6 @@ void handleWakeup(esp_sleep_wakeup_cause_t wakeup_reason){
         log("Woke up from external interrupt");
         wakeupFunction = 1;
 
-        sensors_data_t sensors = readSensors();
-        power_data_t power = readPowerData();
-
-        displayManager.setData(power, sensors);
         displayManager.powerOn();
         return;
     }

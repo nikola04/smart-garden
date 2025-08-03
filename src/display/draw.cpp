@@ -10,7 +10,7 @@ void initDrawUtils(Adafruit_SSD1306 *display){
 
 void drawText(Adafruit_SSD1306 *display, const char *string){
     display->setTextSize(1);
-    display->setCursor(24, 10);
+    display->setCursor(26, 16);
     display->println(string);
     display->display();
 }

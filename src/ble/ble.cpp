@@ -4,7 +4,7 @@
 #include "json.h"
 
 BLEManager::BLEManager(){
-    started = true;
+    started = false;
 }
 
 void BLEManager::init() {

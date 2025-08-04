@@ -78,7 +78,11 @@ void handleButtonPress(){
 // on short button press
 void handleButtonLongPress(){
     log("long press");
-    sleepManager.startSleep();
+    if(wakeupFunction == 0){ // if woken up on timer and then long press turn on peripherals instead
+        displayManager.powerOn();
+        bleManager.start();
+        wakeupFunction = 1;
+    } else sleepManager.startSleep();
 }
 
 void handleWiFiStatusChange(WiFiStatus status){

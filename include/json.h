@@ -3,7 +3,7 @@
 #define JSON_H
 
 String stringifyDeviceConfig(String deviceName, String powerMode, String wifiSSID, String wifiPassword);
-String stringifyWiFiStatus(wifi_status_t);
+String stringifyWiFiStatus(WiFiStatus);
 String stringifyWiFiNetwork(String, int);
 String stringifyAPIData(sensors_data_t, power_data_t);
 

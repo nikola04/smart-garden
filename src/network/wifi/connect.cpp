@@ -2,57 +2,58 @@
 #include "storage.h"
 #include "WiFi.h"
 
-static wifi_status_t wifiStatus = WIFI_DISCONNECTED;
-static ulong connectionStartTime = 0;
-
-String wifiSSID = "";
-String wifiPassword = "";
-
-wifi_status_t wifiGetStatus(){
-    return wifiStatus;
+WiFiConnectManager::WiFiConnectManager(){
+    wifiStatus = WiFiStatus::DISCONNECTED;
+    ssid = "";
+    password = "";
 }
 
-void initWifi(String ssid, String password) {
-    wifiSSID = ssid;
-    wifiPassword = password;
+void WiFiConnectManager::init(){
+    this->ssid = getWifiSSID();
+    this->password = getWifiPassword();
 }
 
-int wifiConnect(){
-    connectionStartTime = millis();
-    WiFi.begin(wifiSSID.c_str(), wifiPassword.c_str());
-    return 0;
+void WiFiConnectManager::begin(){
+    connectionStart = millis();
+    WiFi.begin(ssid.c_str(), password.c_str());
 }
 
-void wifiConnectionLoop(){
+void WiFiConnectManager::loop(){
     static ushort retryCount = 0;
     static ulong lastRetryTime = 0;
 
+    WiFiStatus oldStatus = wifiStatus;
     wl_status_t status = WiFi.status();
-    if(status == WL_CONNECTED){
-        wifiStatus = WIFI_CONNECTED;
+    if(status == WL_CONNECTED){ // if connected
+        wifiStatus = WiFiStatus::CONNECTED;
         retryCount = 0;
-        return;
-    }
-
-    if(status == WL_NO_SHIELD){
-        wifiStatus = WIFI_DISCONNECTED;
-        return;
-    }
-
-    if(status == WL_CONNECT_FAILED || (millis() - connectionStartTime > 15000)){
-        if(retryCount < 4){
+    }else if(status == WL_NO_SHIELD){ // disconnect
+        wifiStatus = WiFiStatus::DISCONNECTED;
+    }else if(status == WL_CONNECT_FAILED || (millis() - connectionStart > 10000)){ // retry on fail or timeout
+        if(retryCount < 3){
             ulong retry_delay = 1000 * (1 << retryCount);
 
             if(millis() - lastRetryTime > retry_delay){
                 lastRetryTime = millis();
                 retryCount++;
-                wifiConnect();
+                this->begin(); // retry
+                return;
             }
-        }else wifiStatus = WIFI_DISCONNECTED;
-    }else wifiStatus = WIFI_CONNECTING;
+        }else wifiStatus = WiFiStatus::DISCONNECTED;
+    }else wifiStatus = WiFiStatus::CONNECTING;
+
+    if(oldStatus != wifiStatus)
+        statusHandler(wifiStatus);
 }
 
-int wifiDisable(){
+WiFiStatus WiFiConnectManager::getStatus(){
+    return wifiStatus;
+}
+
+void WiFiConnectManager::disable(){
     WiFi.mode(WIFI_OFF);
-    return 0;
+}
+
+void WiFiConnectManager::setStatusHandler(void (*handler)(WiFiStatus)){
+    statusHandler = handler;
 }

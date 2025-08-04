@@ -60,7 +60,8 @@ void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
     pChar->setValue("OK");
 
     if (!doc["wifi_ssid"].isNull() || !doc["wifi_password"].isNull()){
-        wifiConnect();
+        WiFiConnectManager::getInstance().init();
+        WiFiConnectManager::getInstance().begin();
     }
 
     log("Configuration updated");
@@ -75,12 +76,12 @@ void DeviceCallbacks::onRead(BLECharacteristic *pChar) {
 void SensorCallbacks::onRead(BLECharacteristic *pChar) {
     sensors_data_t sensors = readSensors();
     power_data_t power = readPowerData();
-    wifi_status_t wifi = wifiGetStatus();
+    WiFiStatus wifi = WiFiConnectManager::getInstance().getStatus();
     String wifiStatus;
 
-    if (wifi == WIFI_CONNECTED)
+    if (wifi == WiFiStatus::CONNECTED)
         wifiStatus = "connected";
-    else if (wifi == WIFI_CONNECTING)
+    else if (wifi == WiFiStatus::CONNECTING)
         wifiStatus = "connecting";
     else
         wifiStatus = "disconnected";

@@ -14,10 +14,10 @@ void drawText(Adafruit_SSD1306 *display, const char *string){
     display->println(string);
 }
 
-void drawTemplate(Adafruit_SSD1306 *display, float temp){
+void drawTemplate(Adafruit_SSD1306 *display, WiFiStatus wifiStatus, float temp){
     display->clearDisplay();
     // wifi sunny temp       charging battery
-    drawWiFiStatus(display, wifiGetStatus());
+    drawWiFiStatus(display, wifiStatus);
     drawTemperature(display, temp);
 }
 
@@ -37,18 +37,18 @@ void drawArc(Adafruit_SSD1306 *display, int cx, int cy, int radius, int start_an
 }
 
 static int connecting_icon_state = 0;
-void drawWiFiStatus(Adafruit_SSD1306 *display, wifi_status_t status){
+void drawWiFiStatus(Adafruit_SSD1306 *display, WiFiStatus status){
     int x = 8;
     int y = 10;
 
     switch(status){
-        case WIFI_CONNECTED:
+        case WiFiStatus::CONNECTED:
             drawArc(display, x, y, 10, 210, 330);
             drawArc(display, x, y, 6, 210, 330);
             display->fillCircle(x, y, 2, WHITE);
             break;
 
-        case WIFI_CONNECTING:
+        case WiFiStatus::CONNECTING:
             if(connecting_icon_state == 1){
                 drawArc(display, x, y, 6, 210, 330);
             }
@@ -56,7 +56,7 @@ void drawWiFiStatus(Adafruit_SSD1306 *display, wifi_status_t status){
             connecting_icon_state = (connecting_icon_state + 1) % 2;
             break;
 
-        case WIFI_DISCONNECTED:
+        case WiFiStatus::DISCONNECTED:
         default:
             drawArc(display, x, y, 10, 210, 330);
             drawArc(display, x, y, 6, 210, 330);

@@ -5,18 +5,40 @@
 #include "sensors.h"
 #include "power.h"
 
-enum wifi_status_t {
-    WIFI_CONNECTING = 1,
-    WIFI_CONNECTED = 2,
-    WIFI_DISCONNECTED = 0,
+enum class WiFiStatus {
+    DISCONNECTED = 0,
+    CONNECTING = 1,
+    CONNECTED = 2,
 };
 
 // wifi/connect.cpp
-wifi_status_t wifiGetStatus();
-void initWifi(String ssid, String password);
-int wifiConnect();
-int wifiDisable();
-void wifiConnectionLoop();
+class WiFiConnectManager {
+public:
+    static WiFiConnectManager& getInstance() {
+        static WiFiConnectManager instance;
+        return instance;
+    }
+
+    void init();
+    void begin();
+
+    void setStatusHandler(void (*handler)(WiFiStatus));
+
+    void loop();
+    void disable();
+
+    WiFiStatus getStatus();
+private:
+    WiFiConnectManager();
+
+    WiFiStatus wifiStatus;
+    String ssid;
+    String password;
+
+    ulong connectionStart;
+
+    void (*statusHandler)(WiFiStatus);
+};
 
 // wifi/scan.cpp
 void wifiStartScan();

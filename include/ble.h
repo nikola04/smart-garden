@@ -6,10 +6,22 @@
 #include "logger.h"
 #include "storage.h"
 
-void setupBLE();
-void startBLE();
-void stopBLE();
-void loopBLE();
+class BLEManager {
+public:
+    BLEManager();
+
+    void init();
+    void start();
+
+    void loop();
+    void handleWiFiStatusChange(WiFiStatus status);
+
+    void stop();
+private:
+    BLEService *pService;
+    BLECharacteristic *sensorCharacteristic;
+    BLECharacteristic *wifiCharacteristic;
+};
 
 class ServerCallbacks : public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) override;

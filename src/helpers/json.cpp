@@ -12,11 +12,11 @@ String stringifyDeviceConfig(String deviceName, String powerMode, String wifiSSI
     return json;
 }
 
-String stringifyWiFiStatus(wifi_status_t wifi){
+String stringifyWiFiStatus(WiFiStatus wifi){
     String wifi_status = "disconnected";;
-    if (wifi == WIFI_CONNECTED)
+    if (wifi == WiFiStatus::CONNECTED)
         wifi_status = "connected";
-    else if (wifi == WIFI_CONNECTING)
+    else if (wifi == WiFiStatus::CONNECTING)
         wifi_status = "connecting";
         
     String json = "{";

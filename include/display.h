@@ -31,7 +31,6 @@ private:
     uint16_t currentMode = 0;
     uint16_t displayCount = 4;
 
-    wifi_status_t previousWiFiStatus = WIFI_DISCONNECTED;
     uint32_t lastRefresh = 0;
 
     power_data_t powerData;

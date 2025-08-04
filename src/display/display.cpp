@@ -13,7 +13,7 @@ void DisplayManager::powerOn() {
 
     displayOn = true;
     initDrawUtils(&display);
-    drawTemplate(&display, sensorData.air.temperature);
+    refresh();
 }
 
 void DisplayManager::powerOff() {
@@ -30,7 +30,8 @@ bool DisplayManager::isOn() const {
 }
 
 void DisplayManager::refresh() {
-    drawTemplate(&display, sensorData.air.temperature);
+    WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
+    drawTemplate(&display, wifiStatus, sensorData.air.temperature);
     if(currentMode >= 0) {
         (this->*displayFunctions[currentMode])();
     }
@@ -41,10 +42,8 @@ void DisplayManager::refresh() {
 void DisplayManager::loop() {
     if (!displayOn) return;
 
-    wifi_status_t currentStatus = wifiGetStatus();
-    if (currentStatus != previousWiFiStatus || 
-        (currentStatus == WIFI_CONNECTING && millis() - lastRefresh > 1000)) {
-        previousWiFiStatus = currentStatus;
+    WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
+    if(wifiStatus == WiFiStatus::CONNECTING && millis() - lastRefresh > 1000){
         refresh();
     }
 }

@@ -6,7 +6,7 @@
 #define I2C_SCL                 22
 #define GPIO_BUTTON_PIN         15
 #define LONG_PRESS_DURATION_MS  1000
-#define DEEPSLEEP_TIME_S        60 * 10 // 10 minutes
+#define DEEPSLEEP_TIME_S        6 // 10 minutes
 #define INACTIVE_TIME_MS        15000
 #define ALTITUDE_M              145
 

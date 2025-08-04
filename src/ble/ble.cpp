@@ -4,6 +4,7 @@
 #include "json.h"
 
 BLEManager::BLEManager(){
+    started = true;
 }
 
 void BLEManager::init() {
@@ -46,6 +47,9 @@ void BLEManager::init() {
 }
 
 void BLEManager::start() {
+    if(started) return;
+    started = true;
+
     pService->start();
 
     // Advertising setup
@@ -60,6 +64,7 @@ void BLEManager::start() {
 }
 
 void BLEManager::loop() {
+    if(!started) return;
     // wifi scan
     int wifiStatus;
     if((wifiStatus = wifiGetScanStatus()) != -3){
@@ -85,12 +90,15 @@ void BLEManager::loop() {
 }
 
 void BLEManager::handleWiFiStatusChange(WiFiStatus status){
+    if(!started) return;
+    
     String json = stringifyWiFiStatus(status);
     sensorCharacteristic->setValue(json.c_str());
     sensorCharacteristic->notify();
 }
 
 void BLEManager::stop(){
+    started = false;
     BLEDevice::deinit(true);
     log("BLE server stopped");
 }

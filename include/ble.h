@@ -18,6 +18,7 @@ public:
 
     void stop();
 private:
+    bool started;
     BLEService *pService;
     BLECharacteristic *sensorCharacteristic;
     BLECharacteristic *wifiCharacteristic;

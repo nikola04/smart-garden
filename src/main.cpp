@@ -28,7 +28,7 @@ void setup() {
     wakeupButtonManager.setLongPressHandler(handleButtonLongPress);
 
     // Init sensors
-    initSensors();
+    SensorsManager::init();
 
     // Setup wireless
     initWireless();
@@ -38,7 +38,7 @@ void setup() {
     wifiManager.setStatusHandler(handleWiFiStatusChange);
 
     // Initialize display
-    displayManager.setData(readPowerData(), readSensors());
+    displayManager.setData(readPowerData(), SensorsManager::readSensors());
 
     // Initialize BLE
     bleManager.init();
@@ -54,7 +54,7 @@ void setup() {
 void loop(){
     static ulong lastUpdate = 0;
     if(millis() - lastUpdate > 3000){
-        sensors_data_t sensors = readSensors();
+        SensorsData sensors = SensorsManager::readSensors();
         power_data_t power = readPowerData();
 
         displayManager.setData(power, sensors);
@@ -94,7 +94,7 @@ void handleWiFiStatusChange(WiFiStatus status){
     }
     if(status == WiFiStatus::CONNECTED){
         displayManager.showNotification("Sending..");
-        if(sendData(readSensors(), readPowerData()) != 0){
+        if(sendData(SensorsManager::readSensors(), readPowerData()) != 0){
             displayManager.showNotification("Fail!");
         }else {
             displayManager.showNotification("Sent!");

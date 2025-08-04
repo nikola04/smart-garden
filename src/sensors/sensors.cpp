@@ -1,31 +1,28 @@
 #include "logger.h"
-#include "bmp180.h"
 #include "sensors.h"
 #include "helpers.h"
 
-static BMP180 bmp180;
+BMP180 SensorsManager::bmp180;
 
-void initSensors() {
+void SensorsManager::init() {
     bmp180.begin();
 }
 
-air_data_t readAirSensor() {
-    air_data_t air_sensor;
-
-    // Read the air sensor data
+AirData SensorsManager::readAirSensor(){
     float temp = bmp180.getTemperature();
     float pressure = bmp180.getPressure();
     int humidity = 50;
 
-    air_sensor.temperature = temp;
-    air_sensor.humidity = humidity;
-    air_sensor.pressure = pressure;
+    AirData airData;
+    airData.temperature = temp;
+    airData.humidity = humidity;
+    airData.pressure = pressure;
 
-    return air_sensor;
+    return airData;
 }
 
-soil_data_t readSoilSensors() {
-    soil_data_t soil_sensor;
+SoilData SensorsManager::readSoilSensor(){
+    SoilData soilData;
 
     // Read the calibrated and calculated soil sensor data
     float moisture_sensors[] = { 66.4, 62.5, 55.6, 69.1, 1.0 };
@@ -34,32 +31,30 @@ soil_data_t readSoilSensors() {
     float *filtered_values = filter_outliers(moisture_sensors, 5, &n);
     float moisture = (float) fcalculate_mean(filtered_values, n);
 
-    soil_sensor.moisture = moisture;
-    soil_sensor.sensors_used = n;
+    soilData.moisture = moisture;
+    soilData.sensors_used = n;
 
-    return soil_sensor;
+    return soilData;
 }
 
-light_data_t readLightSensor() {
-    light_data_t light_sensor;
+LightData SensorsManager::readLightSensor(){
+    LightData lightData;
 
-    // Read the light sensor data
     ushort value = 1000;
     bool night = false;
 
-    light_sensor.value = value;
-    light_sensor.night = night;
+    lightData.value = value;
+    lightData.night = night;
 
-    return light_sensor;
+    return lightData;
 }
 
-sensors_data_t readSensors()
-{
-    sensors_data_t sensors;
+SensorsData SensorsManager::readSensors(){
+    SensorsData sensorsData;
 
-    sensors.air = readAirSensor();
-    sensors.soil = readSoilSensors();
-    sensors.light = readLightSensor();
+    sensorsData.air = readAirSensor();
+    sensorsData.soil = readSoilSensor();
+    sensorsData.light = readLightSensor();
 
-    return sensors;
+    return sensorsData;
 }

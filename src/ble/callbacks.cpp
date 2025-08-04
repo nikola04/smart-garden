@@ -74,7 +74,7 @@ void DeviceCallbacks::onRead(BLECharacteristic *pChar) {
 }
 
 void SensorCallbacks::onRead(BLECharacteristic *pChar) {
-    sensors_data_t sensors = readSensors();
+    SensorsData sensors = SensorsManager::readSensors();
     power_data_t power = readPowerData();
     WiFiStatus wifi = WiFiConnectManager::getInstance().getStatus();
     String wifiStatus;

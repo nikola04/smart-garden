@@ -49,6 +49,6 @@ int wifiGetResultRSSI(int index);
 void wifiEndScan();
 
 // api/uploader.cpp
-int sendData(sensors_data_t sdata, power_data_t pdata);
+int sendData(SensorsData sdata, power_data_t pdata);
 
 #endif // NETWORK_H

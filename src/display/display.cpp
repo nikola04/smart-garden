@@ -58,7 +58,7 @@ void DisplayManager::showNotification(const char* message) {
     drawText(&display, message);
 }
 
-void DisplayManager::setData(const power_data_t& p, const sensors_data_t& s) {
+void DisplayManager::setData(const power_data_t& p, const SensorsData& s) {
     powerData = p;
     sensorData = s;
 }

@@ -4,7 +4,7 @@
 #include "storage.h"
 #include "json.h"
 
-int sendData(sensors_data_t sdata, power_data_t pdata){
+int sendData(SensorsData sdata, power_data_t pdata){
     if (WiFi.status() != WL_CONNECTED) return -2;
 
     String api_key = getAPIKey();

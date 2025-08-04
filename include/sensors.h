@@ -2,33 +2,40 @@
 #define SENSORS_H
 
 #include "types.h"
+#include "bmp180.h"
 
-typedef struct air_data {
-    float temperature;  // Celsius
-    float humidity;     // %
-    float pressure;     // hPa
-} air_data_t;
+struct AirData {
+    float temperature;      // Celsius
+    float humidity;         // %
+    float pressure;         // hPa
+};
 
-typedef struct soil_data {
-    float moisture;     // %
+struct SoilData {
+    float moisture;         // %
     ushort sensors_used;
-} soil_data_t;
+};
 
-typedef struct light_data {
+struct LightData {
     ushort value;
     bool night;
-} light_data_t;
+};
 
-typedef struct sensors {
-    air_data_t air;
-    soil_data_t soil;
-    light_data_t light;
-} sensors_data_t;
+struct SensorsData {
+    AirData air;
+    SoilData soil;
+    LightData light;
+};
 
-void initSensors();
-air_data_t readAirSensor();
-soil_data_t readSoilSensors();
-light_data_t readLightSensor();
-sensors_data_t readSensors();
+class SensorsManager {
+public:
+    static void init();
+
+    static AirData readAirSensor();
+    static SoilData readSoilSensor();
+    static LightData readLightSensor();
+    static SensorsData readSensors();
+private:
+    static BMP180 bmp180;
+};
 
 #endif // SENSORS_H

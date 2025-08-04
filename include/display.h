@@ -18,7 +18,7 @@ public:
     void refresh();
     void cycle();
     void showNotification(const char* message);
-    void setData(const power_data_t& powerData, const sensors_data_t& sensorData);
+    void setData(const power_data_t& powerData, const SensorsData& sensorData);
 
 private:
     void drawPower();
@@ -34,7 +34,7 @@ private:
     uint32_t lastRefresh = 0;
 
     power_data_t powerData;
-    sensors_data_t sensorData;
+    SensorsData sensorData;
 
     using DrawFunction = void (DisplayManager::*)();
     DrawFunction displayFunctions[4];

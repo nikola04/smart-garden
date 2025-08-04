@@ -35,7 +35,7 @@ String stringifyWiFiNetwork(String ssid, int rssi){
     return json.c_str();
 }
 
-String stringifyAPIData(sensors_data_t sdata, power_data_t pdata){
+String stringifyAPIData(SensorsData sdata, power_data_t pdata){
     String json = "{";
 
     json += "\"air\":{";

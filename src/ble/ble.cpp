@@ -4,13 +4,19 @@
 #include "json.h"
 
 BLEManager::BLEManager(){
-    started = false;
+    advertisingStarted = false;
+    serviceStarted = false;
+    deviceConnected = false;
 }
 
 void BLEManager::init() {
+    advertisingStarted = false;
+    serviceStarted = false;
+    deviceConnected = false;
+
     BLEDevice::init(("SmartGarden - " + String(getDeviceName())).c_str());
 
-    BLEServer* pServer = BLEDevice::createServer();
+    pServer = BLEDevice::createServer();
 
     pServer->setCallbacks(new ServerCallbacks());
 
@@ -44,13 +50,6 @@ void BLEManager::init() {
     );
     wifiCharacteristic->setCallbacks(new WifiCallbacks());
     wifiCharacteristic->addDescriptor(new BLE2902());
-}
-
-void BLEManager::start() {
-    if(started) return;
-    started = true;
-
-    pService->start();
 
     // Advertising setup
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
@@ -58,13 +57,38 @@ void BLEManager::start() {
     pAdvertising->setScanResponse(true);
     pAdvertising->setMinPreferred(0x06);
 
-    pAdvertising->start();
+    pService->start();
+    serviceStarted = true;
+}
 
+void BLEManager::start() {
+    if(advertisingStarted) return;
+    advertisingStarted = true;
+
+    // if(!serviceStarted && pService != nullptr) {
+    //     // pService->start();
+    //     serviceStarted = true;
+    // }
+    pServer->startAdvertising();
     Serial.println("BLE advertising started");
 }
 
+void BLEManager::stop() {
+    // if(!deviceConnected && serviceStarted){
+        // pService->stop();
+        // serviceStarted = false;
+        // log("Service stopped");
+    // }
+
+    if(!advertisingStarted) return;
+    advertisingStarted = false;
+
+    pServer->getAdvertising()->stop();
+    Serial.println("BLE advertising stopped");
+}
+
 void BLEManager::loop() {
-    if(!started) return;
+    if(!serviceStarted) return;
     // wifi scan
     int wifiStatus;
     if((wifiStatus = wifiGetScanStatus()) != -3){
@@ -90,15 +114,45 @@ void BLEManager::loop() {
 }
 
 void BLEManager::handleWiFiStatusChange(WiFiStatus status){
-    if(!started) return;
+    if(!serviceStarted) return;
     
     String json = stringifyWiFiStatus(status);
     sensorCharacteristic->setValue(json.c_str());
     sensorCharacteristic->notify();
 }
 
-void BLEManager::stop(){
-    started = false;
-    BLEDevice::deinit(true);
-    log("BLE server stopped");
+void BLEManager::onConnect(){
+    if(!serviceStarted) return;
+
+    advertisingStarted = false;
+    deviceConnected = true;
+    connectHandler();
+}
+
+void BLEManager::onDisconnect(){
+    deviceConnected = false;
+    // if(!advertisingStarted && serviceStarted && pService != nullptr) pService->stop();
+    disconnectHandler();
+}
+
+void BLEManager::setConnectHandler(void (*handler)()){
+    this->connectHandler = handler;
+}
+
+void BLEManager::setDisconnectHandler(void (*handler)()){
+    this->disconnectHandler = handler;
+}
+
+void BLEManager::disable()
+{
+    advertisingStarted = false;
+
+    // if (serviceStarted && pService != nullptr) {
+        // pService->stop();
+        // pService = nullptr;
+    // }
+    // serviceStarted = false;
+
+    sensorCharacteristic = nullptr;
+    wifiCharacteristic = nullptr;
 }

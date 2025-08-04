@@ -1,12 +1,19 @@
 #include "storage.h"
 #include "config.h"
+#include "logger.h"
 #include "Preferences.h"
 
-String getPreference(const String &key) {
+String getPreference(const String &key, const String &fallback) {
     Preferences prefs;
     prefs.begin("config", false);
     char buffer[128] = {0};
-    prefs.getString(key.c_str(), buffer, sizeof(buffer));
+    int len = prefs.getString(key.c_str(), buffer, sizeof(buffer));
+    if(len == 0){
+        prefs.putString(key.c_str(), fallback.c_str());
+        prefs.end();
+        return fallback;
+    }
+
     prefs.end();
     return String(buffer);
 }
@@ -19,12 +26,7 @@ void setPreference(const String &key, const String &value) {
 }
 
 String getDeviceName() {
-    String name = getPreference("device_name");
-    if(name && name.length() > 2) 
-        return name;
-        
-    setDeviceName(String(DEFAULT_DEVICE_NAME));
-    return String(DEFAULT_DEVICE_NAME);
+    return getPreference("device_name", DEFAULT_DEVICE_NAME);
 }
 
 void setDeviceName(const String &name) {
@@ -32,7 +34,7 @@ void setDeviceName(const String &name) {
 }
 
 String getPowerMode() {
-    return getPreference("power_mode");
+    return getPreference("power_mode", DEFAULT_POWER_MODE);
 }
 
 void setPowerMode(const String &mode) {
@@ -40,7 +42,7 @@ void setPowerMode(const String &mode) {
 }
 
 String getWifiSSID() {
-    return getPreference("wifi_ssid");
+    return getPreference("wifi_ssid", DEFAULT_WIFI_SSID);
 }
 
 void setWifiSSID(const String &ssid) {
@@ -48,7 +50,7 @@ void setWifiSSID(const String &ssid) {
 }
 
 String getWifiPassword() {
-    return getPreference("wifi_password");
+    return getPreference("wifi_password", DEFAULT_WIFI_PASSWORD);
 }
 
 void setWifiPassword(const String &password) {
@@ -56,11 +58,7 @@ void setWifiPassword(const String &password) {
 }
 
 String getAPIKey() {
-    String apiKey = getPreference("api_key");
-    if(apiKey && apiKey.length() > 0)
-        return apiKey;
-
-    return DEFAULT_API_KEY;
+    return getPreference("api_key", DEFAULT_API_KEY);
 }
 
 void setAPIKey(const String &apiKey) {

@@ -9,6 +9,10 @@ void handleWakeup(WakeupReason);
 void handleSleep();
 void handleButtonPress();
 void handleButtonLongPress();
+void handleButtonHold();
+void handleButtonRelease();
+void handleBLEDisconnect();
+void handleBLEConnect();
 void handleWiFiStatusChange(WiFiStatus status);
 
 #endif // MAIN_H

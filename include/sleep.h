@@ -12,8 +12,12 @@ enum class WakeupReason {
 
 class SleepManager {
 public: 
-    SleepManager(int sleepTimer);
+    static SleepManager& getInstance() {
+        static SleepManager instance;
+        return instance;
+    }
 
+    void init(int sleepTimer);
     void loop();
     void enableSleepTimer();
     void disableSleepTimer();
@@ -27,6 +31,8 @@ public:
     void startSleep();
 
 private:
+    SleepManager();
+
     bool timerEnabled;
     ulong timerStart;
     ulong timerDuration;

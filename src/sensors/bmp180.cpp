@@ -6,7 +6,6 @@ Adafruit_BMP085 BMP180::bmp;
 
 bool BMP180::begin(){
     if (!bmp.begin()) {
-        log("BMP180 init failed!");
         return false;
     }
     log("BMP180 initialized.");

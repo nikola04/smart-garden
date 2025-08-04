@@ -2,10 +2,11 @@
 
 ulong ButtonManager::lastButtonsPress = 0;
 
-ButtonManager::ButtonManager(int pin, int longPressDuration, bool wakeupState){
+ButtonManager::ButtonManager(int pin, int longPressDuration, int holdDelay, bool wakeupState){
     this->pin = pin;
     this->wakeupState = wakeupState;
     this->longPressDuration = longPressDuration;
+    this->holdDelay = holdDelay;
 
     this->pressStart = 0;
     this->lastPress = 0;
@@ -28,9 +29,23 @@ void ButtonManager::loop() {
         wakeupState = false;
     }
 
-    if(!isPressed && pinValue == LOW){ // first press
+    if(!isPressed && pinValue == LOW) { // first press
         isPressed = true;
         pressStart = millis();
+        return;
+    }
+
+    if(!isHold && pinValue == LOW){ 
+        if(millis() - pressStart > holdDelay) {
+            isHold = true;
+            holdHandler();
+        }
+    }
+
+    if(isHold && pinValue == HIGH){
+        isHold = false;
+        isPressed = false;
+        releaseHandler();
         return;
     }
     
@@ -55,4 +70,12 @@ void ButtonManager::setShortPressHandler(void (*handler)()) {
 
 void ButtonManager::setLongPressHandler(void (*handler)()) {
     longPressHandler = handler;
+}
+
+void ButtonManager::setHoldHandler(void (*handler)()){
+    holdHandler = handler;
+}
+
+void ButtonManager::setReleaseHandler(void (*handler)()){
+    releaseHandler = handler;
 }

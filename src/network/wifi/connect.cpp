@@ -1,6 +1,7 @@
 #include "network.h"
 #include "storage.h"
 #include "WiFi.h"
+#include "logger.h"
 
 WiFiConnectManager::WiFiConnectManager(){
     wifiStatus = WiFiStatus::DISCONNECTED;
@@ -14,7 +15,9 @@ void WiFiConnectManager::init(){
 }
 
 void WiFiConnectManager::begin(){
+    WiFi.disconnect();
     connectionStart = millis();
+    if(ssid.length() == 0) return;
     WiFi.begin(ssid.c_str(), password.c_str());
 }
 
@@ -27,9 +30,9 @@ void WiFiConnectManager::loop(){
     if(status == WL_CONNECTED){ // if connected
         wifiStatus = WiFiStatus::CONNECTED;
         retryCount = 0;
-    }else if(status == WL_NO_SHIELD){ // disconnect
+    }else if(status == WL_DISCONNECTED){ // disconnect
         wifiStatus = WiFiStatus::DISCONNECTED;
-    }else if(status == WL_CONNECT_FAILED || (millis() - connectionStart > 10000)){ // retry on fail or timeout
+    }else if(status == WL_CONNECT_FAILED || status == WL_CONNECTION_LOST || (millis() - connectionStart > 10000)){ // retry on fail or timeout
         if(retryCount < 3){
             ulong retry_delay = 1000 * (1 << retryCount);
 

@@ -1,8 +1,11 @@
 #include "sleep.h"
 
-SleepManager::SleepManager(int sleepTimer){
+SleepManager::SleepManager(){
     timerEnabled = false;
     timerStart = 0;
+}
+
+void SleepManager::init(int sleepTimer){
     timerDuration = sleepTimer;
 }
 
@@ -39,7 +42,8 @@ void SleepManager::startSleep(){
     esp_deep_sleep_start();
 }
 
-void SleepManager::loop(){
+void SleepManager::loop()
+{
     if(!timerEnabled) return;
     if(millis() - timerStart < timerDuration) return;
 

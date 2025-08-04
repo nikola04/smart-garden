@@ -1,7 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "WiFi.h"
+#include "HTTPClient.h"
 #include "sensors.h"
 #include "power.h"
 
@@ -40,6 +40,25 @@ private:
     void (*statusHandler)(WiFiStatus);
 };
 
+// api/client.cpp
+enum class APIClientResult {
+    WIFI_NOT_CONNECTED,
+    HTTP_ERROR,
+    EXCEPTION,
+    SUCCESS
+};
+
+class APIClient {
+public:
+    APIClient();
+
+    void init(String apiUrl, String apiKey);
+    APIClientResult send(String payload);
+private:
+    String apiUrl;
+    String apiKey;
+};
+
 // wifi/scan.cpp
 void wifiStartScan();
 int wifiGetScanStatus();
@@ -48,7 +67,5 @@ String wifiGetResultSSID(int index);
 int wifiGetResultRSSI(int index);
 void wifiEndScan();
 
-// api/uploader.cpp
-int sendData(SensorsData sdata, power_data_t pdata);
 
 #endif // NETWORK_H

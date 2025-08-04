@@ -1,10 +1,21 @@
 #include "display.h"
 #include "draw.h"
+#include "logger.h"
 #include "Wire.h"
 
-DisplayManager::DisplayManager(): display(128, 32, &Wire, -1),
-    displayFunctions{ &DisplayManager::drawPower, &DisplayManager::drawSoil, &DisplayManager::drawAir, &DisplayManager::drawBattery }
-{}
+DisplayManager::DisplayManager(): display(128, 32, &Wire, -1){
+
+}
+
+void DisplayManager::init() {
+    displayFunctions[0] = &DisplayManager::drawPower;
+    displayFunctions[1] = &DisplayManager::drawSoil;
+    displayFunctions[2] = &DisplayManager::drawAir;
+    displayFunctions[3] = &DisplayManager::drawBattery;
+    mode = DisplayMode::NOTIFICATION;
+    notificationText = "Hello!";
+    displayFn = 0;
+}
 
 void DisplayManager::powerOn() {
     if (displayOn) return;
@@ -17,7 +28,7 @@ void DisplayManager::powerOn() {
 }
 
 void DisplayManager::powerOff() {
-    if (!displayOn) return;
+    if (!displayOn && !display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) return;
 
     display.clearDisplay();
     display.display();
@@ -31,9 +42,13 @@ bool DisplayManager::isOn() const {
 
 void DisplayManager::refresh() {
     WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
+
     drawTemplate(&display, wifiStatus, sensorData.air.temperature);
-    if(currentMode >= 0) {
-        (this->*displayFunctions[currentMode])();
+    if(mode == DisplayMode::SCREEN) {
+        if (displayFn < displayFnCount && displayFunctions[displayFn]) 
+            (this->*displayFunctions[displayFn])();
+    }else {
+        drawText(&display, notificationText.c_str());
     }
     display.display();
     lastRefresh = millis();
@@ -43,24 +58,22 @@ void DisplayManager::loop() {
     if (!displayOn) return;
 
     WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
-    if(wifiStatus == WiFiStatus::CONNECTING && millis() - lastRefresh > 1000){
+    if((wifiStatus == WiFiStatus::CONNECTING && millis() - lastRefresh > 750) 
+        || millis() - lastRefresh > 2500){
         refresh();
     }
 }
 
-void DisplayManager::cycle() {
-    currentMode = (currentMode + 1) % displayCount;
-    this->refresh();
-}
-
 void DisplayManager::showNotification(const char* message) {
-    currentMode = -1;
-    drawText(&display, message);
+    this->notificationText = String(message);
+    this->mode = DisplayMode::NOTIFICATION;
+    refresh();
 }
 
-void DisplayManager::setData(const power_data_t& p, const SensorsData& s) {
-    powerData = p;
-    sensorData = s;
+void DisplayManager::cycle() {
+    this->displayFn = (displayFn + 1) % displayFnCount;
+    this->mode = DisplayMode::SCREEN;
+    this->refresh();
 }
 
 void DisplayManager::drawPower() {
@@ -74,4 +87,9 @@ void DisplayManager::drawAir() {
 }
 void DisplayManager::drawBattery() {
     drawText(&display, "display: 4");
+}
+
+void DisplayManager::setData(const power_data_t& p, const SensorsData& s) {
+    powerData = p;
+    sensorData = s;
 }

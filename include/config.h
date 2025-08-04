@@ -6,6 +6,7 @@
 #define I2C_SCL                 22
 #define GPIO_BUTTON_PIN         15
 #define LONG_PRESS_DURATION_MS  1000
+#define HOLD_DELAY_MS           3000
 #define DEEPSLEEP_TIME_S        60 * 10 // 10 minutes
 #define INACTIVE_TIME_MS        15000
 #define ALTITUDE_M              145
@@ -17,7 +18,10 @@
 #define WIFI_CHARACTERISTIC_UUID        "45DC0F38-9C98-4B8A-A49A-5C8542E63E44"
 
 #define DEFAULT_DEVICE_NAME             "DevBoard"
+#define DEFAULT_POWER_MODE              "balanced" // eco, balanced, power 
 #define DEFAULT_API_URL                 "https://garden.nnikola.xyz/api/report"
 #define DEFAULT_API_KEY                 "49e6c23080ef188e45edbaaa1f1bd21c7e8c79bfe88455e40636266d98182807"
+#define DEFAULT_WIFI_SSID               ""
+#define DEFAULT_WIFI_PASSWORD           ""
 
 #endif // CONFIG_H

@@ -4,17 +4,15 @@
 #include "power.h"
 #include "system.h"
 #include "ArduinoJson.h"
-
-bool deviceConnected = false;
+#include "esp_timer.h"
+#include "esp_system.h"
 
 void ServerCallbacks::onConnect(BLEServer* pServer) {
-    deviceConnected = true;
+    BLEManager::getInstance().onConnect();
 }
 
 void ServerCallbacks::onDisconnect(BLEServer* pServer) {
-    deviceConnected = false;
-    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->start();
+    BLEManager::getInstance().onDisconnect();
 }
 
 void SystemCallbacks::onWrite(BLECharacteristic *pChar){

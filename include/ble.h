@@ -8,20 +8,39 @@
 
 class BLEManager {
 public:
-    BLEManager();
+    static BLEManager& getInstance() {
+        static BLEManager instance;
+        return instance;
+    }
 
     void init();
     void start();
+    void stop();
 
     void loop();
     void handleWiFiStatusChange(WiFiStatus status);
 
-    void stop();
+    void onConnect();
+    void onDisconnect();
+
+    void setConnectHandler(void (*handler)());
+    void setDisconnectHandler(void (*handler)());
+
+    void disable();
 private:
-    bool started;
+    BLEManager();
+
+    bool advertisingStarted = false;
+    bool serviceStarted = false;
     BLEService *pService;
+    BLEServer *pServer;
     BLECharacteristic *sensorCharacteristic;
     BLECharacteristic *wifiCharacteristic;
+
+    void (*connectHandler)();
+    void (*disconnectHandler)();
+
+    bool deviceConnected;
 };
 
 class ServerCallbacks : public BLEServerCallbacks {

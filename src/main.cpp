@@ -6,15 +6,13 @@
 #include "wireless.h"
 #include "logger.h"
 #include "button.h"
+#include "json.h"
 
 static int wakeupFunction = -1;
-static bool waitingWifi = false;
 
-ButtonManager wakeupButtonManager(GPIO_BUTTON_PIN, LONG_PRESS_DURATION_MS, true);
-WiFiConnectManager& wifiManager = WiFiConnectManager::getInstance();
+ButtonManager wakeupButtonManager(GPIO_BUTTON_PIN, LONG_PRESS_DURATION_MS, HOLD_DELAY_MS, true);
 DisplayManager displayManager;
-BLEManager bleManager;
-SleepManager sleepManager(INACTIVE_TIME_MS);
+APIClient apiClient;
 
 void setup() {
     Serial.begin(SERIAL_BAUD);
@@ -26,29 +24,38 @@ void setup() {
     wakeupButtonManager.begin();
     wakeupButtonManager.setShortPressHandler(handleButtonPress);
     wakeupButtonManager.setLongPressHandler(handleButtonLongPress);
+    wakeupButtonManager.setHoldHandler(handleButtonHold);
+    wakeupButtonManager.setReleaseHandler(handleButtonRelease);
 
-    // Init sensors
+    // Initialize sensors
     SensorsManager::init();
 
     // Setup wireless
     initWireless();
 
     // WiFi connection
-    wifiManager.init();
-    wifiManager.setStatusHandler(handleWiFiStatusChange);
+    WiFiConnectManager::getInstance().init();
+    WiFiConnectManager::getInstance().setStatusHandler(handleWiFiStatusChange);
 
     // Initialize display
+    displayManager.init();
     displayManager.setData(readPowerData(), SensorsManager::readSensors());
 
+    // Initialize API Client
+    apiClient.init(DEFAULT_API_URL, getAPIKey());
+
     // Initialize BLE
-    bleManager.init();
+    BLEManager::getInstance().init();
+    BLEManager::getInstance().setConnectHandler(handleBLEConnect);
+    BLEManager::getInstance().setDisconnectHandler(handleBLEDisconnect);
 
     // Deep sleep configuration
-    sleepManager.enableTimerWakeup(DEEPSLEEP_TIME_S);
-    sleepManager.enableExtWakeup(GPIO_BUTTON_PIN);
-    sleepManager.setSleepHandler(handleSleep);
-    sleepManager.handleWakeup(handleWakeup);
-    sleepManager.enableSleepTimer();
+    SleepManager::getInstance().init(INACTIVE_TIME_MS);
+    SleepManager::getInstance().enableTimerWakeup(DEEPSLEEP_TIME_S);
+    SleepManager::getInstance().enableExtWakeup(GPIO_BUTTON_PIN);
+    SleepManager::getInstance().setSleepHandler(handleSleep);
+    SleepManager::getInstance().handleWakeup(handleWakeup);
+    SleepManager::getInstance().enableSleepTimer();
 }
 
 void loop(){
@@ -61,17 +68,17 @@ void loop(){
         lastUpdate = millis();
     }
     
-    wifiManager.loop();
+    WiFiConnectManager::getInstance().loop();
     displayManager.loop();
-    bleManager.loop();
-    sleepManager.loop();
+    BLEManager::getInstance().loop();
+    SleepManager::getInstance().loop();
     wakeupButtonManager.loop();
 }
 
 // on short button press
 void handleButtonPress(){
     log("press");
-    sleepManager.resetSleepTimer();
+    SleepManager::getInstance().resetSleepTimer();
     displayManager.cycle();
 }
 
@@ -79,51 +86,82 @@ void handleButtonPress(){
 void handleButtonLongPress(){
     log("long press");
     if(wakeupFunction == 0){ // if woken up on timer and then long press turn on peripherals instead
+        log("turning on peripherals");
         displayManager.powerOn();
-        bleManager.start();
+        BLEManager::getInstance().start();
         wakeupFunction = 1;
-    } else sleepManager.startSleep();
+    } else SleepManager::getInstance().startSleep();
+}
+
+bool isBLEConnected = false;
+bool isWiFiConnecting = false;
+bool isBtnHold = false;
+void handleButtonHold(){
+    log("hold");
+    isBtnHold = true;
+    SleepManager::getInstance().disableSleepTimer();
+    BLEManager::getInstance().start();
+}
+
+void handleButtonRelease(){
+    log("release");
+    isBtnHold = false;
+    if(!isBLEConnected && !isWiFiConnecting) SleepManager::getInstance().enableSleepTimer();
+    BLEManager::getInstance().stop();
+}
+
+void handleBLEConnect(){
+    isBLEConnected = true;
+    SleepManager::getInstance().disableSleepTimer();
+}
+void handleBLEDisconnect(){
+    isBLEConnected = false;
+    if(!isWiFiConnecting && !isBtnHold) SleepManager::getInstance().enableSleepTimer();
 }
 
 void handleWiFiStatusChange(WiFiStatus status){
-    bleManager.handleWiFiStatusChange(status);
+    BLEManager::getInstance().handleWiFiStatusChange(status);
     
     if(status == WiFiStatus::CONNECTING){
-        sleepManager.disableSleepTimer();
+        isWiFiConnecting = true;
+        SleepManager::getInstance().disableSleepTimer();
         return;
     }
     if(status == WiFiStatus::CONNECTED){
         displayManager.showNotification("Sending..");
-        if(sendData(SensorsManager::readSensors(), readPowerData()) != 0){
+
+        String apiPayload = stringifyAPIData(SensorsManager::readSensors(), readPowerData());
+        if(apiClient.send(apiPayload) != APIClientResult::SUCCESS){
             displayManager.showNotification("Fail!");
         }else {
             displayManager.showNotification("Sent!");
         }
 
         if(wakeupFunction == 0){
-            sleepManager.startSleep();
+            SleepManager::getInstance().startSleep();
+            return;
         }
     }
     // on connected or disconnected:
     displayManager.refresh();
-    sleepManager.enableSleepTimer(); 
+    isWiFiConnecting = false;
+    if(!isBLEConnected && !isBtnHold) SleepManager::getInstance().enableSleepTimer();
 }
 
 void handleWakeup(WakeupReason wakeupReason){
     if(wakeupReason == WakeupReason::UNDEFINED){
-        displayManager.powerOff();
-        sleepManager.startSleep();
+        SleepManager::getInstance().startSleep();
         return;
     }
     if(wakeupReason == WakeupReason::EXT){
         delay(LONG_PRESS_DURATION_MS / 2); // debounce - wait for a half of long press
         if(digitalRead(GPIO_BUTTON_PIN) == HIGH) {
-            sleepManager.startSleep();
+            SleepManager::getInstance().startSleep();
             return;
         }
     }
 
-    wifiManager.begin(); // try connecting
+    WiFiConnectManager::getInstance().begin(); // try connecting
 
     if(wakeupReason == WakeupReason::TIMER){
         log("Woke up from timer");
@@ -135,16 +173,14 @@ void handleWakeup(WakeupReason wakeupReason){
         wakeupFunction = 1;
 
         displayManager.powerOn();
-        bleManager.start();
         return;
     }
 }
 
 void handleSleep(){
-    log("Going back to sleep");
     wakeupFunction = -1;
     displayManager.powerOff();
-    bleManager.stop();
-    wifiManager.disable();
+    BLEManager::getInstance().disable();
+    WiFiConnectManager::getInstance().disable();
     Serial.flush();
 }

@@ -12,7 +12,6 @@ void drawText(Adafruit_SSD1306 *display, const char *string){
     display->setTextSize(1);
     display->setCursor(26, 16);
     display->println(string);
-    display->display();
 }
 
 void drawTemplate(Adafruit_SSD1306 *display, float temp){
@@ -20,7 +19,6 @@ void drawTemplate(Adafruit_SSD1306 *display, float temp){
     // wifi sunny temp       charging battery
     drawWiFiStatus(display, wifiGetStatus());
     drawTemperature(display, temp);
-    display->display();
 }
 
 void drawArc(Adafruit_SSD1306 *display, int cx, int cy, int radius, int start_angle, int end_angle){

@@ -6,12 +6,12 @@
 #include "storage.h"
 #include "wireless.h"
 #include "logger.h"
-#include <driver/rtc_io.h>
+#include "button.h"
 
 static int wakeupFunction = -1;
 static bool waitingWifi = false;
-static ulong lastPress = 0;
 
+ButtonManager wakeupButtonManager(GPIO_BUTTON_PIN, LONG_PRESS_DURATION_MS, true);
 DisplayManager displayManager;
 
 void setup() {
@@ -19,7 +19,11 @@ void setup() {
 
     // Pins configuration
     Wire.begin(I2C_SDA, I2C_SCL);
-    pinMode(GPIO_BUTTON_PIN, INPUT_PULLUP);
+
+    // Buttons configuration
+    wakeupButtonManager.begin();
+    wakeupButtonManager.setShortPressHandler(handleButtonPress);
+    wakeupButtonManager.setLongPressHandler(handleButtonLongPress);
 
     // Init sensors
     initSensors();
@@ -63,42 +67,14 @@ void loop(){
     }
     loopBLE();
     sleepTimeoutLoop();
-    buttonPressLoop();
+    wakeupButtonManager.loop();
 }
 
 // check if inactive for a while to go to sleep
 void sleepTimeoutLoop(){
-    if(millis() - lastPress < INACTIVE_TIME_MS) return;
+    if(millis() - ButtonManager::lastButtonsPress < INACTIVE_TIME_MS) return;
     if(waitingWifi) return;
     handleSleep();
-}
-
-// handle button states
-void buttonPressLoop(){
-    static bool wakeup_button_state = true; // assume that button is not released after wakeup
-    static ulong press_start = 0;
-    static bool pressed = false;
-    int pinValue = digitalRead(GPIO_BUTTON_PIN);
-
-    if(wakeup_button_state && pinValue == LOW) return; // still not released
-    if(wakeup_button_state) wakeup_button_state = false;
-
-    if(!pressed && pinValue == LOW){ // first press
-        pressed = true;
-        press_start = millis();
-        return;
-    }
-    if(pressed && pinValue == HIGH){ // release
-        lastPress = millis();
-        pressed = false;
-        ulong pressDuration = lastPress - press_start;
-        if(pressDuration < 30) return; // debounce
-        if(pressDuration >= LONG_PRESS_DURATION_MS){ // long press
-            handleButtonLongPress();
-            return;
-        }
-        handleButtonPress();
-    }
 }
 
 // on short button press

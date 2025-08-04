@@ -10,6 +10,5 @@ void handleButtonPress();
 void handleButtonLongPress();
 void handleWifiConnected();
 void sleepTimeoutLoop();
-void buttonPressLoop();
 
 #endif // MAIN_H

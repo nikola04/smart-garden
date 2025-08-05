@@ -12,15 +12,19 @@ String stringifyDeviceConfig(String deviceName, String powerMode, String wifiSSI
     return json;
 }
 
-String stringifyWiFiStatus(WiFiStatus wifi){
-    String wifi_status = "disconnected";;
-    if (wifi == WiFiStatus::CONNECTED)
-        wifi_status = "connected";
-    else if (wifi == WiFiStatus::CONNECTING)
-        wifi_status = "connecting";
-        
+String wifiStatusToString(WiFiStatus status) {
+    if (status == WiFiStatus::CONNECTED)
+        return "connected";
+    if (status == WiFiStatus::CONNECTING)
+        return "connecting";
+
+    return "disconnected";
+}
+
+String stringifyWiFiStatus(WiFiStatus wifiStatus){
+
     String json = "{";
-    json += "\"wifi\":\"" + wifi_status + "\"";
+    json += "\"wifi\":\"" + wifiStatusToString(wifiStatus) + "\"";
     json += "}";
 
     return json.c_str();
@@ -35,12 +39,28 @@ String stringifyWiFiNetwork(String ssid, int rssi){
     return json.c_str();
 }
 
+String stringifyBLEData(WiFiStatus wifiStatus, SensorsData sensorsData, power_data powerData){
+    String json = "{";
+    json += "\"wifi\":\"" + wifiStatusToString(wifiStatus) + "\",";
+    json += "\"battery\":\"" + String(powerData.battery.level) + "\",";
+    json += "\"charger\":\"" + String(powerData.solar_panel.current) + "\",";
+    json += "\"air_temp\":\"" + String(sensorsData.air.temperature) + "\",";
+    json += "\"air_hum\":\"" + String(sensorsData.air.humidity) + "\",";
+    json += "\"air_press\":\"" + String(sensorsData.air.pressure) + "\",";
+    json += "\"soil\":\"" + String(sensorsData.soil.moisture) + "\",";
+    json += "\"light\":\"" + String(sensorsData.light.night) + "\"";
+    json += "}";
+
+    return json.c_str();
+}
+
 String stringifyAPIData(SensorsData sdata, power_data_t pdata){
     String json = "{";
 
     json += "\"air\":{";
     json += "\"temperature\":" + String(sdata.air.temperature) + ",";
-    json += "\"humidity\":" + String(sdata.air.humidity) + "},";
+    json += "\"humidity\":" + String(sdata.air.humidity) + ",";
+    json += "\"pressure\":" + String(sdata.air.pressure) + "},";
     
     json += "\"soil\":{";
     json += "\"moisture\":" + String(sdata.soil.moisture) + ",";

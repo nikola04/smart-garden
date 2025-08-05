@@ -1,4 +1,5 @@
 #include "sleep.h"
+#include "logger.h"
 
 SleepManager::SleepManager(){
     timerEnabled = false;
@@ -39,6 +40,7 @@ void SleepManager::setSleepHandler(void (*handler)()){
 
 void SleepManager::startSleep(){
     sleepHandler();
+    log("sleeping now...");
     esp_deep_sleep_start();
 }
 

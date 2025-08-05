@@ -18,6 +18,7 @@ public:
     void stop();
 
     void loop();
+    void handleDataUpdate(WiFiStatus, SensorsData, power_data);
     void handleWiFiStatusChange(WiFiStatus status);
 
     void onConnect();

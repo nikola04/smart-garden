@@ -5,6 +5,7 @@
 #include "sleep.h"
 #include "network.h"
 
+void updateDataLoop();
 void handleWakeup(WakeupReason);
 void handleSleep();
 void handleButtonPress();

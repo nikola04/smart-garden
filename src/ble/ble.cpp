@@ -59,32 +59,29 @@ void BLEManager::init() {
 
     pService->start();
     serviceStarted = true;
+    log("services inited and started");
 }
 
 void BLEManager::start() {
+    if(!serviceStarted && pService != nullptr) {
+        log("service not started. starting...");
+        pService->start();
+        serviceStarted = true;
+    }
+
     if(advertisingStarted) return;
     advertisingStarted = true;
 
-    // if(!serviceStarted && pService != nullptr) {
-    //     // pService->start();
-    //     serviceStarted = true;
-    // }
     pServer->startAdvertising();
-    Serial.println("BLE advertising started");
+    log("BLE advertising started");
 }
 
 void BLEManager::stop() {
-    // if(!deviceConnected && serviceStarted){
-        // pService->stop();
-        // serviceStarted = false;
-        // log("Service stopped");
-    // }
-
     if(!advertisingStarted) return;
     advertisingStarted = false;
 
     pServer->getAdvertising()->stop();
-    Serial.println("BLE advertising stopped");
+    log("BLE advertising stopped");
 }
 
 void BLEManager::loop() {
@@ -113,6 +110,13 @@ void BLEManager::loop() {
     }
 }
 
+void BLEManager::handleDataUpdate(WiFiStatus wifiStatus, SensorsData sensorsData, power_data powerData){
+    String json = stringifyBLEData(wifiStatus, sensorsData, powerData);
+
+    sensorCharacteristic->setValue(json.c_str());
+    sensorCharacteristic->notify();
+}
+
 void BLEManager::handleWiFiStatusChange(WiFiStatus status){
     if(!serviceStarted) return;
     
@@ -122,8 +126,6 @@ void BLEManager::handleWiFiStatusChange(WiFiStatus status){
 }
 
 void BLEManager::onConnect(){
-    if(!serviceStarted) return;
-
     advertisingStarted = false;
     deviceConnected = true;
     connectHandler();
@@ -131,7 +133,6 @@ void BLEManager::onConnect(){
 
 void BLEManager::onDisconnect(){
     deviceConnected = false;
-    // if(!advertisingStarted && serviceStarted && pService != nullptr) pService->stop();
     disconnectHandler();
 }
 
@@ -147,12 +148,14 @@ void BLEManager::disable()
 {
     advertisingStarted = false;
 
-    // if (serviceStarted && pService != nullptr) {
-        // pService->stop();
-        // pService = nullptr;
-    // }
-    // serviceStarted = false;
+    if (serviceStarted && pService != nullptr) {
+        pService->stop();
+        pService = nullptr;
+    }
+
+    // BLEDevice::deinit(true);
 
     sensorCharacteristic = nullptr;
     wifiCharacteristic = nullptr;
+    serviceStarted = false;
 }

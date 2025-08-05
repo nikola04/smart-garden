@@ -72,27 +72,11 @@ void DeviceCallbacks::onRead(BLECharacteristic *pChar) {
 }
 
 void SensorCallbacks::onRead(BLECharacteristic *pChar) {
-    SensorsData sensors = SensorsManager::readSensors();
-    power_data_t power = readPowerData();
-    WiFiStatus wifi = WiFiConnectManager::getInstance().getStatus();
-    String wifiStatus;
+    SensorsData sensorsData = SensorsManager::readSensors();
+    power_data_t powerData = readPowerData();
+    WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
 
-    if (wifi == WiFiStatus::CONNECTED)
-        wifiStatus = "connected";
-    else if (wifi == WiFiStatus::CONNECTING)
-        wifiStatus = "connecting";
-    else
-        wifiStatus = "disconnected";
-
-    String json = "{";
-    json += "\"wifi\":\"" + wifiStatus + "\",";
-    json += "\"battery\":\"" + String(power.battery.level) + "\",";
-    json += "\"charger\":\"" + String(power.solar_panel.current) + "\",";
-    json += "\"air_temp\":\"" + String(sensors.air.temperature) + "\",";
-    json += "\"air_hum\":\"" + String(sensors.air.humidity) + "\",";
-    json += "\"soil\":\"" + String(sensors.soil.moisture) + "\",";
-    json += "\"light\":\"" + String(sensors.light.night) + "\"";
-    json += "}";
+    String json = stringifyBLEData(wifiStatus, sensorsData, powerData);
 
     pChar->setValue(json.c_str());
 }

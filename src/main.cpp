@@ -59,20 +59,27 @@ void setup() {
 }
 
 void loop(){
-    static ulong lastUpdate = 0;
-    if(millis() - lastUpdate > 3000){
-        SensorsData sensors = SensorsManager::readSensors();
-        power_data_t power = readPowerData();
-
-        displayManager.setData(power, sensors);
-        lastUpdate = millis();
-    }
-    
+    updateDataLoop();
     WiFiConnectManager::getInstance().loop();
     displayManager.loop();
     BLEManager::getInstance().loop();
     SleepManager::getInstance().loop();
     wakeupButtonManager.loop();
+}
+
+void updateDataLoop(){
+    static ulong lastUpdate = 0;
+    if(millis() - lastUpdate <= 3000) return;
+
+    WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
+    SensorsData sensorsData = SensorsManager::readSensors();
+    power_data_t powerData = readPowerData();
+
+    displayManager.setData(powerData, sensorsData);
+
+    BLEManager::getInstance().handleDataUpdate(wifiStatus, sensorsData, powerData);
+
+    lastUpdate = millis();
 }
 
 // on short button press
@@ -88,7 +95,6 @@ void handleButtonLongPress(){
     if(wakeupFunction == 0){ // if woken up on timer and then long press turn on peripherals instead
         log("turning on peripherals");
         displayManager.powerOn();
-        BLEManager::getInstance().start();
         wakeupFunction = 1;
     } else SleepManager::getInstance().startSleep();
 }
@@ -148,7 +154,8 @@ void handleWiFiStatusChange(WiFiStatus status){
     if(!isBLEConnected && !isBtnHold) SleepManager::getInstance().enableSleepTimer();
 }
 
-void handleWakeup(WakeupReason wakeupReason){
+void handleWakeup(WakeupReason wakeupReason)
+{
     if(wakeupReason == WakeupReason::UNDEFINED){
         SleepManager::getInstance().startSleep();
         return;

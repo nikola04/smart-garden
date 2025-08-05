@@ -7,12 +7,14 @@
 #include "logger.h"
 #include "button.h"
 #include "json.h"
+#include "debug.h"
 
 static int wakeupFunction = -1;
 
 ButtonManager wakeupButtonManager(GPIO_BUTTON_PIN, LONG_PRESS_DURATION_MS, HOLD_DELAY_MS, true);
 DisplayManager displayManager;
 APIClient apiClient;
+UARTDebug debug;
 
 void setup() {
     Serial.begin(SERIAL_BAUD);
@@ -56,6 +58,9 @@ void setup() {
     SleepManager::getInstance().setSleepHandler(handleSleep);
     SleepManager::getInstance().handleWakeup(handleWakeup);
     SleepManager::getInstance().enableSleepTimer();
+
+    // Initialize Debug
+    debug.begin();
 }
 
 void loop(){
@@ -65,6 +70,7 @@ void loop(){
     BLEManager::getInstance().loop();
     SleepManager::getInstance().loop();
     wakeupButtonManager.loop();
+    debug.loop();
 }
 
 void updateDataLoop(){
@@ -102,27 +108,37 @@ void handleButtonLongPress(){
 bool isBLEConnected = false;
 bool isWiFiConnecting = false;
 bool isBtnHold = false;
+void enableSleepIfIdle() {
+    if (!isBLEConnected && !isWiFiConnecting && !isBtnHold) {
+        SleepManager::getInstance().enableSleepTimer();
+    }
+}
+
 void handleButtonHold(){
     log("hold");
     isBtnHold = true;
     SleepManager::getInstance().disableSleepTimer();
     BLEManager::getInstance().start();
+    displayManager.showNotification("BLE Advertising..");
 }
 
 void handleButtonRelease(){
     log("release");
     isBtnHold = false;
-    if(!isBLEConnected && !isWiFiConnecting) SleepManager::getInstance().enableSleepTimer();
+    enableSleepIfIdle();
     BLEManager::getInstance().stop();
+    displayManager.screenMode();
 }
 
 void handleBLEConnect(){
     isBLEConnected = true;
     SleepManager::getInstance().disableSleepTimer();
+    displayManager.showNotification("BLE Connected"); // will automatically refresh display for BLE status icon
 }
 void handleBLEDisconnect(){
     isBLEConnected = false;
-    if(!isWiFiConnecting && !isBtnHold) SleepManager::getInstance().enableSleepTimer();
+    enableSleepIfIdle();
+    displayManager.showNotification("BLE Disconnected"); // will automatically refresh display for BLE status icon
 }
 
 void handleWiFiStatusChange(WiFiStatus status){
@@ -138,9 +154,9 @@ void handleWiFiStatusChange(WiFiStatus status){
 
         String apiPayload = stringifyAPIData(SensorsManager::readSensors(), readPowerData());
         if(apiClient.send(apiPayload) != APIClientResult::SUCCESS){
-            displayManager.showNotification("Fail!");
+            displayManager.showNotification("Send failed");
         }else {
-            displayManager.showNotification("Sent!");
+            displayManager.showNotification("Data sent");
         }
 
         if(wakeupFunction == 0){
@@ -151,7 +167,7 @@ void handleWiFiStatusChange(WiFiStatus status){
     // on connected or disconnected:
     displayManager.refresh();
     isWiFiConnecting = false;
-    if(!isBLEConnected && !isBtnHold) SleepManager::getInstance().enableSleepTimer();
+    enableSleepIfIdle();
 }
 
 void handleWakeup(WakeupReason wakeupReason)

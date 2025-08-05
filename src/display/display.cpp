@@ -1,6 +1,7 @@
 #include "display.h"
 #include "draw.h"
 #include "logger.h"
+#include "ble.h"
 #include "Wire.h"
 
 DisplayManager::DisplayManager(): display(128, 32, &Wire, -1){
@@ -42,8 +43,9 @@ bool DisplayManager::isOn() const {
 
 void DisplayManager::refresh() {
     WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
+    BLEStatus bleStatus = BLEManager::getInstance().getStatus();
 
-    drawTemplate(&display, wifiStatus, sensorData.air.temperature);
+    drawTemplate(&display, wifiStatus, bleStatus, sensorData.air.temperature);
     if(mode == DisplayMode::SCREEN) {
         if (displayFn < displayFnCount && displayFunctions[displayFn]) 
             (this->*displayFunctions[displayFn])();
@@ -71,7 +73,17 @@ void DisplayManager::showNotification(const char* message) {
 }
 
 void DisplayManager::cycle() {
-    this->displayFn = (displayFn + 1) % displayFnCount;
+    if(this->mode == DisplayMode::SCREEN)
+        this->displayFn = (displayFn + 1) % displayFnCount;
+    else {
+        this->mode = DisplayMode::SCREEN;
+        this->displayFn = 0;
+    } 
+    this->refresh();
+}
+
+void DisplayManager::screenMode(){
+    this->displayFn = 0;
     this->mode = DisplayMode::SCREEN;
     this->refresh();
 }

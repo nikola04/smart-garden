@@ -6,6 +6,12 @@
 #include "logger.h"
 #include "storage.h"
 
+enum class BLEStatus {
+    OFF,
+    CONNECTED,
+    DISCONNECTED
+};
+
 class BLEManager {
 public:
     static BLEManager& getInstance() {
@@ -16,6 +22,8 @@ public:
     void init();
     void start();
     void stop();
+
+    BLEStatus getStatus();
 
     void loop();
     void handleDataUpdate(WiFiStatus, SensorsData, power_data);

@@ -24,6 +24,7 @@ public:
 
     void refresh();
     void cycle();
+    void screenMode();
     void showNotification(const char* message);
     void setData(const power_data_t& powerData, const SensorsData& sensorData);
 

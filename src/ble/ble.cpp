@@ -84,6 +84,15 @@ void BLEManager::stop() {
     log("BLE advertising stopped");
 }
 
+BLEStatus BLEManager::getStatus() {
+    if(!serviceStarted)
+        return BLEStatus::OFF;
+    if(!deviceConnected)
+        return BLEStatus::DISCONNECTED;
+    
+    return BLEStatus::CONNECTED;
+}
+
 void BLEManager::loop() {
     if(!serviceStarted) return;
     // wifi scan

@@ -3,6 +3,11 @@
 
 #include "HardwareSerial.h"
 
+enum class DebugScreen{
+    MAIN,
+    LOG_MODE
+};
+
 class UARTDebug {
 public:
     UARTDebug(HardwareSerial &serialPort = Serial, uint32_t baudRate = 115200);
@@ -20,9 +25,13 @@ private:
     uint32_t baud;
 
     bool isEnabled;
+    DebugScreen screen;
 
     void processCommand(char cmd);
+    void processMainCommand(char cmd);
+    void processLogCommand(char cmd);
     void printMenu();
+    void printLogModeMenu();
     void printWiFiStatus();
     void printBLEStatus();
 };

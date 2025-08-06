@@ -27,7 +27,7 @@ public:
     void enableExtWakeup(int pin);
     void enableTimerWakeup(int timeSec);
 
-    void handleWakeup(void (*handler)(WakeupReason));
+    WakeupReason getWakeupReason();
     void startSleep();
 
 private:

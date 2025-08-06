@@ -19,19 +19,15 @@ void SleepManager::enableTimerWakeup(int timeSec){
     esp_sleep_enable_timer_wakeup(wakeupTimerUS);
 }
 
-void SleepManager::handleWakeup(void (*handler)(WakeupReason)){
-    esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+WakeupReason SleepManager::getWakeupReason(){
+    esp_sleep_wakeup_cause_t wakeupReason = esp_sleep_get_wakeup_cause();
 
-    switch(wakeup_reason) {
-        case ESP_SLEEP_WAKEUP_EXT0:
-            handler(WakeupReason::EXT);
-            return;
-        case ESP_SLEEP_WAKEUP_TIMER:
-            handler(WakeupReason::TIMER);
-            return;
-        default:
-            handler(WakeupReason::UNDEFINED);
-    }
+    if(wakeupReason == ESP_SLEEP_WAKEUP_EXT0)
+        return WakeupReason::EXT;
+    if(wakeupReason == ESP_SLEEP_WAKEUP_TIMER)
+        return WakeupReason::TIMER;
+
+    return WakeupReason::UNDEFINED;
 }
 
 void SleepManager::setSleepHandler(void (*handler)()){
@@ -40,7 +36,7 @@ void SleepManager::setSleepHandler(void (*handler)()){
 
 void SleepManager::startSleep(){
     sleepHandler();
-    log("sleeping now...");
+    Logger::getInstance().log("Sleep", "starting deep sleep..");
     esp_deep_sleep_start();
 }
 

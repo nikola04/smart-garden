@@ -78,7 +78,8 @@ void DisplayManager::cycle() {
     else {
         this->mode = DisplayMode::SCREEN;
         this->displayFn = 0;
-    } 
+    }
+    Logger::getInstance().debug("Display", "screen cycled.");
     this->refresh();
 }
 

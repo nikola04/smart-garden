@@ -6,6 +6,7 @@ BMP180 SensorsManager::bmp180;
 
 void SensorsManager::init() {
     bmp180.begin();
+    Logger::getInstance().debug("Sensors", "initialized.");
 }
 
 AirData SensorsManager::readAirSensor(){
@@ -51,7 +52,7 @@ LightData SensorsManager::readLightSensor(){
 
 SensorsData SensorsManager::readSensors(){
     SensorsData sensorsData;
-
+    
     sensorsData.air = readAirSensor();
     sensorsData.soil = readSoilSensor();
     sensorsData.light = readLightSensor();

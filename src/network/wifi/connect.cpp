@@ -15,6 +15,7 @@ void WiFiConnectManager::init(){
 }
 
 void WiFiConnectManager::begin(){
+    Logger::getInstance().debug("WiFi", "connecting..");
     WiFi.disconnect();
     connectionStart = millis();
     if(ssid.length() == 0) return;
@@ -39,6 +40,7 @@ void WiFiConnectManager::loop(){
             if(millis() - lastRetryTime > retry_delay){
                 lastRetryTime = millis();
                 retryCount++;
+                Logger::getInstance().debug("WiFi", "retrying to connect..");
                 this->begin(); // retry
                 return;
             }

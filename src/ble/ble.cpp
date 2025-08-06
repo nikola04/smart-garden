@@ -59,12 +59,11 @@ void BLEManager::init() {
 
     pService->start();
     serviceStarted = true;
-    log("services inited and started");
+    Logger::getInstance().debug("BLE", "service started.");
 }
 
 void BLEManager::start() {
     if(!serviceStarted && pService != nullptr) {
-        log("service not started. starting...");
         pService->start();
         serviceStarted = true;
     }
@@ -73,7 +72,7 @@ void BLEManager::start() {
     advertisingStarted = true;
 
     pServer->startAdvertising();
-    log("BLE advertising started");
+    Logger::getInstance().log("BLE", "advertising started.");
 }
 
 void BLEManager::stop() {
@@ -81,7 +80,7 @@ void BLEManager::stop() {
     advertisingStarted = false;
 
     pServer->getAdvertising()->stop();
-    log("BLE advertising stopped");
+    Logger::getInstance().log("BLE", "advertising stopped.");
 }
 
 BLEStatus BLEManager::getStatus() {
@@ -126,10 +125,9 @@ void BLEManager::handleDataUpdate(WiFiStatus wifiStatus, SensorsData sensorsData
     sensorCharacteristic->notify();
 }
 
-void BLEManager::handleWiFiStatusChange(WiFiStatus status){
-    if(!serviceStarted) return;
-    
+void BLEManager::handleWiFiStatusChange(WiFiStatus status){    
     String json = stringifyWiFiStatus(status);
+    
     sensorCharacteristic->setValue(json.c_str());
     sensorCharacteristic->notify();
 }

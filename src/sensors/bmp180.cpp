@@ -8,7 +8,7 @@ bool BMP180::begin(){
     if (!bmp.begin()) {
         return false;
     }
-    log("BMP180 initialized.");
+    Logger::getInstance().debug("BMP180", "initialized.");
     return true;
 }
 

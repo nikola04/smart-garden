@@ -1,5 +1,5 @@
 #include "network.h"
-#include "main.h"
+#include "logger.h"
 
 bool scanning = false;
 int lastIndex = 0;
@@ -8,6 +8,7 @@ void wifiStartScan(){
     if(scanning) 
         return;
 
+    Logger::getInstance().debug("WiFiScan", "starting..");
     WiFi.disconnect();
     WiFi.mode(WIFI_STA);
     WiFi.scanNetworks(true, true);
@@ -29,8 +30,10 @@ int wifiGetScanStatus(){
 
 int wifiGetResultsCount(){
     int n = WiFi.scanComplete();
-    if(n >= 0)
+    if(n >= 0){
+        Logger::getInstance().debug("WiFiScan", "scanned.");
         return n;
+    }
 
     return -1;
 }

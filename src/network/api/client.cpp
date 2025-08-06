@@ -2,6 +2,7 @@
 #include "config.h"
 #include "storage.h"
 #include "json.h"
+#include "logger.h"
 
 APIClient::APIClient(){
     String apiUrl = "";
@@ -20,6 +21,7 @@ APIClientResult APIClient::send(String payload){
     HTTPClient http;
     http.setTimeout(5000);
 
+    Logger::getInstance().log("API", "sending data..");
     try{
         http.begin(apiUrl);
         http.addHeader("Content-Type", "application/json");
@@ -28,12 +30,15 @@ APIClientResult APIClient::send(String payload){
         int responseCode = http.POST(payload);
         if (responseCode < 200 || responseCode >= 300){
             http.end();
+            Logger::getInstance().error("API", ("data not sent: " + String(responseCode)).c_str());
             return APIClientResult::HTTP_ERROR;
         }
         http.end();
+        Logger::getInstance().log("API", "data sent.");
         return APIClientResult::SUCCESS;
     }catch(...){
         http.end();
+        Logger::getInstance().error("API", "data not sent: Exception catched");
         return APIClientResult::EXCEPTION;
     }
 }

@@ -10,13 +10,21 @@ public:
     void begin();
     void loop();
 
+    void log(const char* message);
+
+    void enable();
+    void disable();
+
 private:
     HardwareSerial &serial;
     uint32_t baud;
-    bool debugLogsEnabled;
 
-    void printMenu();
+    bool isEnabled;
+
     void processCommand(char cmd);
+    void printMenu();
+    void printWiFiStatus();
+    void printBLEStatus();
 };
 
 #endif // DEBUG_H

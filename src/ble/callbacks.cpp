@@ -46,6 +46,7 @@ void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
     DeserializationError error = deserializeJson(doc, value);
     if (error) {
         pChar->setValue("ERR: Invalid JSON");
+        Logger::getInstance().error("BLE", "invalid device JSON");
         return;
     }
 
@@ -62,7 +63,7 @@ void DeviceCallbacks::onWrite(BLECharacteristic *pChar) {
         WiFiConnectManager::getInstance().begin();
     }
 
-    log("Configuration updated");
+    Logger::getInstance().log("BLE", "updated configuration.");
 }
 
 void DeviceCallbacks::onRead(BLECharacteristic *pChar) {

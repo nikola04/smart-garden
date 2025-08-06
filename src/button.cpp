@@ -1,4 +1,5 @@
 #include "button.h"
+#include "logger.h"
 
 ulong ButtonManager::lastButtonsPress = 0;
 
@@ -38,6 +39,7 @@ void ButtonManager::loop() {
     if(!isHold && pinValue == LOW){ 
         if(millis() - pressStart > holdDelay) {
             isHold = true;
+            Logger::getInstance().debug("Button", "holding..");
             holdHandler();
         }
     }
@@ -45,6 +47,7 @@ void ButtonManager::loop() {
     if(isHold && pinValue == HIGH){
         isHold = false;
         isPressed = false;
+        Logger::getInstance().debug("Button", "released.");
         releaseHandler();
         return;
     }
@@ -57,9 +60,11 @@ void ButtonManager::loop() {
         if(pressDuration < 30) return; // debounce
 
         if(pressDuration >= longPressDuration){ // long press
+            Logger::getInstance().debug("Button", "long pressed.");
             if(longPressHandler) longPressHandler();
             return;
         }
+        Logger::getInstance().debug("Button", "short pressed.");
         if(shortPressHandler) shortPressHandler();
     }
 }

@@ -1,4 +1,5 @@
 #include "power.h"
+#include "logger.h"
 
 battery_t readBatteryData(){
     battery_t battery;

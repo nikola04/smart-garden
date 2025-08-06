@@ -9,15 +9,15 @@
 #include "json.h"
 #include "debug.h"
 
-static int wakeupFunction = -1;
-
 ButtonManager wakeupButtonManager(GPIO_BUTTON_PIN, LONG_PRESS_DURATION_MS, HOLD_DELAY_MS, true);
 DisplayManager displayManager;
 APIClient apiClient;
-UARTDebug debug;
+UARTDebug uartDebugger;
 
 void setup() {
-    Serial.begin(SERIAL_BAUD);
+    // Initialize Logger & Debug
+    uartDebugger.begin();
+    Logger::getInstance().init(&uartDebugger);
 
     // Pins configuration
     Wire.begin(I2C_SDA, I2C_SCL);
@@ -56,11 +56,9 @@ void setup() {
     SleepManager::getInstance().enableTimerWakeup(DEEPSLEEP_TIME_S);
     SleepManager::getInstance().enableExtWakeup(GPIO_BUTTON_PIN);
     SleepManager::getInstance().setSleepHandler(handleSleep);
-    SleepManager::getInstance().handleWakeup(handleWakeup);
     SleepManager::getInstance().enableSleepTimer();
 
-    // Initialize Debug
-    debug.begin();
+    handleWakeup();
 }
 
 void loop(){
@@ -70,7 +68,13 @@ void loop(){
     BLEManager::getInstance().loop();
     SleepManager::getInstance().loop();
     wakeupButtonManager.loop();
-    debug.loop();
+    uartDebugger.loop();
+}
+
+void enterInteractiveMode(){
+    Logger::getInstance().debug("Main", "entering interactive mode..");
+    uartDebugger.enable();
+    displayManager.powerOn();
 }
 
 void updateDataLoop(){
@@ -90,19 +94,16 @@ void updateDataLoop(){
 
 // on short button press
 void handleButtonPress(){
-    log("press");
     SleepManager::getInstance().resetSleepTimer();
     displayManager.cycle();
 }
 
 // on short button press
 void handleButtonLongPress(){
-    log("long press");
-    if(wakeupFunction == 0){ // if woken up on timer and then long press turn on peripherals instead
-        log("turning on peripherals");
-        displayManager.powerOn();
-        wakeupFunction = 1;
-    } else SleepManager::getInstance().startSleep();
+    if(SleepManager::getInstance().getWakeupReason() == WakeupReason::TIMER) // if woken up on timer and then long press turn on peripherals instead
+        enterInteractiveMode();
+    else 
+        SleepManager::getInstance().startSleep();
 }
 
 bool isBLEConnected = false;
@@ -115,7 +116,6 @@ void enableSleepIfIdle() {
 }
 
 void handleButtonHold(){
-    log("hold");
     isBtnHold = true;
     SleepManager::getInstance().disableSleepTimer();
     BLEManager::getInstance().start();
@@ -123,7 +123,6 @@ void handleButtonHold(){
 }
 
 void handleButtonRelease(){
-    log("release");
     isBtnHold = false;
     enableSleepIfIdle();
     BLEManager::getInstance().stop();
@@ -159,7 +158,7 @@ void handleWiFiStatusChange(WiFiStatus status){
             displayManager.showNotification("Data sent");
         }
 
-        if(wakeupFunction == 0){
+        if(SleepManager::getInstance().getWakeupReason() == WakeupReason::TIMER && !displayManager.isOn()){ // if woken up by timer
             SleepManager::getInstance().startSleep();
             return;
         }
@@ -170,8 +169,8 @@ void handleWiFiStatusChange(WiFiStatus status){
     enableSleepIfIdle();
 }
 
-void handleWakeup(WakeupReason wakeupReason)
-{
+void handleWakeup(){
+    WakeupReason wakeupReason = SleepManager::getInstance().getWakeupReason();
     if(wakeupReason == WakeupReason::UNDEFINED){
         SleepManager::getInstance().startSleep();
         return;
@@ -187,23 +186,20 @@ void handleWakeup(WakeupReason wakeupReason)
     WiFiConnectManager::getInstance().begin(); // try connecting
 
     if(wakeupReason == WakeupReason::TIMER){
-        log("Woke up from timer");
-        wakeupFunction = 0;
+        Logger::getInstance().debug("Main", "woke up from timer.");
         return;
     }
     if(wakeupReason == WakeupReason::EXT){
-        log("Woke up from external interrupt");
-        wakeupFunction = 1;
-
-        displayManager.powerOn();
+        Logger::getInstance().debug("Main", "woke up from external interrupt.");
+        enterInteractiveMode();
         return;
     }
 }
 
 void handleSleep(){
-    wakeupFunction = -1;
     displayManager.powerOff();
     BLEManager::getInstance().disable();
     WiFiConnectManager::getInstance().disable();
+    uartDebugger.disable();
     Serial.flush();
 }

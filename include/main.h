@@ -6,7 +6,7 @@
 #include "network.h"
 
 void updateDataLoop();
-void handleWakeup(WakeupReason);
+void handleWakeup();
 void handleSleep();
 void handleButtonPress();
 void handleButtonLongPress();

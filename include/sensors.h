@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "bmp180.h"
+#include "soil_sensor.h"
 
 struct AirData {
     float temperature;      // Celsius
@@ -36,6 +37,7 @@ public:
     static SensorsData readSensors();
 private:
     static BMP180 bmp180;
+    static SoilSensor soilSensor;
 };
 
 #endif // SENSORS_H

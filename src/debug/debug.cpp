@@ -3,6 +3,9 @@
 #include "ble.h"
 #include "sleep.h"
 #include "system.h"
+// #include "buffer.h"
+
+// Buffer buffer(64);
 
 UARTDebug::UARTDebug(HardwareSerial &serialPort, uint32_t baudRate): serial(serialPort), baud(baudRate) {
     isEnabled = false;
@@ -17,7 +20,9 @@ void UARTDebug::loop(){
     if (!isEnabled || !serial.available()) return;
 
     char c = serial.read();
-    if (c == '\n' || c == '\r') return;
+    if (c == '\n' || c == '\r') 
+        return;
+
     serial.println(c);
     processCommand(c);
     serial.println("");
@@ -32,7 +37,7 @@ void UARTDebug::log(const char* message){
 
 void UARTDebug::enable(){
     isEnabled = true;
-    printMenu();
+    printMenu(serial);
     serial.print("> ");
 }
 
@@ -51,63 +56,63 @@ void UARTDebug::processCommand(char cmd) {
         processLogCommand(cmd);
         return;
     }
+    if(screen == DebugScreen::WIFI_MODE){
+        processWiFiCommand(cmd);
+        return;
+    }
     serial.println("Unknown mode");
 }
 
 void UARTDebug::processMainCommand(char cmd){
     if(cmd == '?'){
-        printMenu();
-        return;
-    }
-    if(cmd == 'w'){
-        printWiFiStatus();
-        return;
-    }
-    if(cmd == 'b'){
-        printBLEStatus();
-        return;
-    }
-    if(cmd == 'm'){
+        printMenu(serial);
+    }else if(cmd == 'w'){
+        screen = DebugScreen::WIFI_MODE;
+        printWiFiMenu(serial);
+    }else if(cmd == 'b'){
+        printBLEStatus(serial);
+    }else if(cmd == 'm'){
         screen = DebugScreen::LOG_MODE;
-        printLogModeMenu();
-        return;
-    }
-    if(cmd == 'x'){
+        printLogModeMenu(serial);
+    }else if(cmd == 'x'){
         triggerRestart(nullptr);
-        return;
-    }
-    if(cmd == 's'){
+    }else if(cmd == 's'){
         triggerDeepSleep(nullptr);
-        return;
-    }
-    if(cmd == 'q'){
+    }else if(cmd == 'q'){
         serial.println("Quiting debug mode..");
         isEnabled = false;
         serial.println("Restart device to enter debug again.");
-        return;
-    }
-    serial.println("Unknown command");
+    }else serial.println("Unknown command");
 }
 
-String loggerModeToString(LoggerMode mode){
-    switch (mode) {
-        case LoggerMode::OFF:   return "OFF";
-        case LoggerMode::INFO:  return "INFO";
-        case LoggerMode::WARN:  return "WARN";
-        case LoggerMode::ERROR: return "ERROR";
-        case LoggerMode::DEBUG: return "DEBUG";
-        default:                return "UNKNOWN";
+void UARTDebug::processWiFiCommand(char cmd){
+    if(cmd == '?'){
+        printWiFiMenu(serial);
+        return;
+    }
+    if(cmd == 'b'){
+        screen = DebugScreen::MAIN;
+        printMenu(serial);
+        return;
+    }
+
+    if(cmd == 's'){
+        serial.println("Not supported yet.");
+    }else if(cmd == 'm'){
+        serial.println("Not supported yet.");
+    }else {
+        serial.println("Unknown command");
     }
 }
 
 void UARTDebug::processLogCommand(char cmd){
     if(cmd == '?'){
-        printLogModeMenu();
+        printLogModeMenu(serial);
         return;
     }
     if(cmd == 'b'){
         screen = DebugScreen::MAIN;
-        printMenu();
+        printMenu(serial);
         return;
     }
 
@@ -125,60 +130,6 @@ void UARTDebug::processLogCommand(char cmd){
         serial.println("Unknown command");
         return;
     }
-    serial.println("Mode is set to: " + loggerModeToString(Logger::getInstance().getMode()));
+    serial.println("Mode is set to: " + Logger::getInstance().getModeString());
     screen = DebugScreen::MAIN;
-}
-
-void UARTDebug::printMenu(){
-    serial.println(F("\n\\\\\\ SmartGarden Debug Interface ///"));
-    serial.println("");
-    serial.println("Commands:");
-    serial.println(F("?     : Display this help menu"));
-    serial.println(F("w     : Show WiFi status"));
-    serial.println(F("b     : Show BLE status"));
-    serial.println(F("m     : Edit Logger mode"));
-    serial.println(F("x     : Restart device"));
-    serial.println(F("s     : Sleep now"));
-    serial.println(F("q     : Quit debug mode"));
-    serial.println("");
-}
-
-void UARTDebug::printLogModeMenu(){
-    String currentMode = loggerModeToString(Logger::getInstance().getMode());
-
-    serial.println("\n\\\\\\ Logger mode selector ///");
-    serial.println("");
-    serial.println("Current: " + currentMode);
-    serial.println("");
-    serial.println("Commands:");
-    serial.println(F("?     : Display this logger menu"));
-    serial.println(F("0     : Turn off"));
-    serial.println(F("1     : Enable INFO mode"));
-    serial.println(F("2     : Enable WARN mode"));
-    serial.println(F("3     : Enable ERROR mode (recommended)"));
-    serial.println(F("4     : Enable DEBUG mode"));
-    serial.println(F("b     : Go to Main Menu"));
-    serial.println("");
-}
-
-void UARTDebug::printWiFiStatus(){
-    serial.print(F("WiFi status: "));
-    WiFiStatus wifiStatus = WiFiConnectManager::getInstance().getStatus();
-    if(wifiStatus == WiFiStatus::CONNECTED)
-        serial.println("Connected");
-    else if(wifiStatus == WiFiStatus::CONNECTED)
-        serial.println("Connecting");
-    else
-        serial.println("Disconnected");
-}
-
-void UARTDebug::printBLEStatus(){
-    serial.print(F("BLE status: "));
-    BLEStatus bleStatus = BLEManager::getInstance().getStatus();
-    if(bleStatus == BLEStatus::CONNECTED)
-        serial.println("Connected");
-    else if(bleStatus == BLEStatus::DISCONNECTED)
-        serial.println("Disconnected");
-    else
-        serial.println("Off");
 }

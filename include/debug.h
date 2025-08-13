@@ -5,7 +5,8 @@
 
 enum class DebugScreen{
     MAIN,
-    LOG_MODE
+    LOG_MODE,
+    WIFI_MODE,
 };
 
 class UARTDebug {
@@ -30,10 +31,13 @@ private:
     void processCommand(char cmd);
     void processMainCommand(char cmd);
     void processLogCommand(char cmd);
-    void printMenu();
-    void printLogModeMenu();
-    void printWiFiStatus();
-    void printBLEStatus();
+    void processWiFiCommand(char cmd);
 };
+
+void printMenu(HardwareSerial &serial);
+void printWiFiMenu(HardwareSerial &serial);
+void printLogModeMenu(HardwareSerial &serial);
+void printWiFiStatus(HardwareSerial &serial);
+void printBLEStatus(HardwareSerial &serial);
 
 #endif // DEBUG_H

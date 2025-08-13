@@ -3,9 +3,11 @@
 #include "helpers.h"
 
 BMP180 SensorsManager::bmp180;
+SoilSensor SensorsManager::soilSensor(32, 2700, 1000);
 
 void SensorsManager::init() {
     bmp180.begin();
+    soilSensor.begin();
     Logger::getInstance().debug("Sensors", "initialized.");
 }
 
@@ -26,7 +28,9 @@ SoilData SensorsManager::readSoilSensor(){
     SoilData soilData;
 
     // Read the calibrated and calculated soil sensor data
-    float moisture_sensors[] = { 66.4, 62.5, 55.6, 69.1, 1.0 };
+    int moistureValue = soilSensor.readMoisture();
+    Logger::getInstance().debug("SoilSensor", (String(moistureValue) + "%").c_str());
+    float moisture_sensors[] = { moistureValue };
 
     int n;
     float *filtered_values = filter_outliers(moisture_sensors, 5, &n);

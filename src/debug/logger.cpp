@@ -13,6 +13,17 @@ LoggerMode Logger::getMode(){
     return this->mode;
 }
 
+String Logger::getModeString(){
+    switch (this->mode) {
+        case LoggerMode::OFF:   return "OFF";
+        case LoggerMode::INFO:  return "INFO";
+        case LoggerMode::WARN:  return "WARN";
+        case LoggerMode::ERROR: return "ERROR";
+        case LoggerMode::DEBUG: return "DEBUG";
+        default:                return "UNKNOWN";
+    }
+}
+
 String formatMessage(const char* type, const char* tag, const char* message) {
     String msg;
     msg.reserve(64);

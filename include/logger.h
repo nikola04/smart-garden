@@ -21,6 +21,7 @@ public:
 
     void setMode(LoggerMode mode);
     LoggerMode getMode();
+    String getModeString();
 
     void log(const char *tag, const char *message);
     void warn(const char *tag, const char *message);

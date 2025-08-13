@@ -64,3 +64,11 @@ String getAPIKey() {
 void setAPIKey(const String &apiKey) {
     setPreference("api_key", apiKey);
 }
+
+String getLoggerMode(){
+    return getPreference("logger_mode", DEFAULT_LOGGER_MODE);
+}
+
+void setLoggerMode(const String &loggerMode){
+    setPreference("logger_mode", loggerMode);
+}

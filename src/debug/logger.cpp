@@ -1,12 +1,21 @@
 #include "logger.h"
 #include "config.h"
+#include "storage.h"
 
 void Logger::init(UARTDebug *uartDebugger){
     this->uartDebugger = uartDebugger;
+    
+    String modeString = getLoggerMode();
+    if(modeString.equals("DEBUG")) mode = LoggerMode::DEBUG;
+    else if(modeString.equals("INFO")) mode = LoggerMode::INFO;
+    else if(modeString.equals("WARN")) mode = LoggerMode::WARN;
+    else if(modeString.equals("OFF")) mode = LoggerMode::OFF;
+    else mode = LoggerMode::ERROR;
 }
 
 void Logger::setMode(LoggerMode mode){
     this->mode = mode;
+    setLoggerMode(getModeString().c_str());
 }
 
 LoggerMode Logger::getMode(){
@@ -15,12 +24,12 @@ LoggerMode Logger::getMode(){
 
 String Logger::getModeString(){
     switch (this->mode) {
-        case LoggerMode::OFF:   return "OFF";
         case LoggerMode::INFO:  return "INFO";
         case LoggerMode::WARN:  return "WARN";
         case LoggerMode::ERROR: return "ERROR";
         case LoggerMode::DEBUG: return "DEBUG";
-        default:                return "UNKNOWN";
+        case LoggerMode::OFF:
+        default:                return "OFF";
     }
 }
 

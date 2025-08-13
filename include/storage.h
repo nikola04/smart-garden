@@ -18,4 +18,7 @@ void setWifiPassword(const String& password);
 String getAPIKey();
 void setAPIKey(const String& apiKey);
 
+String getLoggerMode();
+void setLoggerMode(const String& loggerMode);
+
 #endif // SSTORAGE_H

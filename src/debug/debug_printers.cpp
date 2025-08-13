@@ -14,7 +14,6 @@ void printMenu(HardwareSerial &serial){
     serial.println(F("x     : Restart device"));
     serial.println(F("s     : Sleep now"));
     serial.println(F("q     : Quit debug mode"));
-    serial.println("");
 }
 
 void printLogModeMenu(HardwareSerial &serial){
@@ -32,7 +31,6 @@ void printLogModeMenu(HardwareSerial &serial){
     serial.println(F("3     : Enable ERROR mode (recommended)"));
     serial.println(F("4     : Enable DEBUG mode"));
     serial.println(F("b     : Go to Main Menu"));
-    serial.println("");
 }
 
 void printWiFiMenu(HardwareSerial &serial){
@@ -47,7 +45,6 @@ void printWiFiMenu(HardwareSerial &serial){
     serial.println(F("s     : Scan WiFi networks"));
     serial.println(F("m     : Enter configuration manually"));
     serial.println(F("b     : Go to Main Menu"));
-    serial.println("");
 }
 
 void printWiFiStatus(HardwareSerial &serial){

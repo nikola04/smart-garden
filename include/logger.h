@@ -29,7 +29,7 @@ public:
     void debug(const char *tag, const char *message);
 private:
     UARTDebug *uartDebugger = nullptr;
-    LoggerMode mode = LoggerMode::DEBUG;
+    LoggerMode mode = LoggerMode::ERROR;
 };
 
 #endif // LOGGER_H

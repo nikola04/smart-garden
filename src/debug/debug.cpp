@@ -25,7 +25,7 @@ void UARTDebug::loop(){
 
     serial.println(c);
     processCommand(c);
-    serial.println("");
+    serial.println();
     if(isEnabled) serial.print("> ");
 }
 
@@ -38,6 +38,7 @@ void UARTDebug::log(const char* message){
 void UARTDebug::enable(){
     isEnabled = true;
     printMenu(serial);
+    serial.println();
     serial.print("> ");
 }
 
